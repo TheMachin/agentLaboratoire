@@ -8,5 +8,11 @@
     <artifactId>agentLaboratoire</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-
+	<dependencies>
+	  	<dependency>  
+		    <groupId>com.tilab.jade</groupId> 
+		    <artifactId>jade</artifactId> 
+		    <version>4.5.0</version>  
+		</dependency>
+  </dependencies>
 </project>
