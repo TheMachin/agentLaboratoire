@@ -1,4 +1,4 @@
-package model;
+package miage.m2.sid.model;
 
 import java.util.Date;
 
