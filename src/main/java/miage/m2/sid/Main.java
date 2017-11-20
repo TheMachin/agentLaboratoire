@@ -1,6 +1,7 @@
 package miage.m2.sid;
 
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import jade.core.Profile;
 import jade.core.ProfileImpl;
@@ -46,13 +47,11 @@ public class Main {
     }
 	
 	
-	public static  Generique jeuEssaisGenerique(){
+	private static  Generique jeuEssaisGenerique(){
 		Laboratoire labo = new Generique(30.0);
 		labo.setNom("Le générique de l'ouest");
-		Lot l1 = new Lot("Vaccin rage", new Date(), 100.0, 10, 30.0, labo, new Maladie("Rage"));
-		l1.setLaboratoire(labo);
-		Lot l2 = new Lot("Vaccin rage", new Date(), 100.0, 10, 30.0, labo, new Maladie("Rage"));
-		l1.setLaboratoire(labo);
+		Lot l1 = new Lot("Vaccin rage", new GregorianCalendar(2017, 10, 10).getTime(), 100.0, 10, 30.0, new Maladie("Rage"));
+		Lot l2 = new Lot("Vaccin rage", new GregorianCalendar(2017, 1, 31).getTime(), 100.0, 10, 30.0, new Maladie("Rage"));
 		labo.addLot(l1);
 		labo.addLot(l2);
 		return (Generique) labo;

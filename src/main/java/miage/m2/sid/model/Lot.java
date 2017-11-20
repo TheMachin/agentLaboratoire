@@ -17,11 +17,9 @@ public class Lot {
 	 * @param prix
 	 * @param nombre
 	 * @param volume
-	 * @param laboratoire
 	 * @param maladie
 	 */
-	public Lot(String nom, Date dateDLU, double prix, int nombre, double volume, Laboratoire laboratoire,
-			Maladie maladie) {
+	public Lot(String nom, Date dateDLU, double prix, int nombre, double volume, Maladie maladie) {
 		this.nom = nom;
 		this.dateDLU = dateDLU;
 		this.prix = prix;
@@ -63,16 +61,15 @@ public class Lot {
 	public Laboratoire getLaboratoire() {
 		return laboratoire;
 	}
-	public void setLaboratoire(Laboratoire laboratoire) {
-		this.laboratoire = laboratoire;
-	}
 	public Maladie getMaladie() {
 		return maladie;
 	}
 	public void setMaladie(Maladie maladie) {
 		this.maladie = maladie;
 	}
-	
-	
-	
+
+
+	public void setLaboratoire(Laboratoire laboratoire) {
+		this.laboratoire = laboratoire;
+	}
 }

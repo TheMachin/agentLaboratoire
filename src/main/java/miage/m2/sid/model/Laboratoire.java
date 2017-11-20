@@ -35,6 +35,7 @@ public abstract class Laboratoire {
 	
 	public void addLot(Lot lot){
 		this.stocks.add(lot);
+		lot.setLaboratoire(this);
 	}
 	
 	public void deleteLot(Lot lot){
