@@ -2,14 +2,27 @@ package miage.m2.sid.model;
 
 import java.util.Date;
 
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToOne;
+
+@Entity
 public class Lot {
+	@Id
 	private String nom;
 	private Date dateDLU;
 	private double prix;
 	private int nombre;
 	private double volume;
 	
+	@ManyToOne(fetch=FetchType.LAZY)
+	@JoinColumn(name="laboratoire_id")
 	private Laboratoire laboratoire;
+	@OneToOne
+	@JoinColumn(name="maladie_name")
 	private Maladie maladie;
 	/**
 	 * @param nom

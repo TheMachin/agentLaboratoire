@@ -1,7 +1,17 @@
 package miage.m2.sid.model;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.Id;
+import javax.persistence.OneToOne;
+
+@Entity
 public class Maladie {
+	@Id
+	@Column(name="maladie_name")
 	private String nom;
+	@OneToOne(fetch=FetchType.LAZY, mappedBy="maladie")
 	private Lot lot;
 	/**
 	 * @param nom

@@ -3,10 +3,20 @@ package miage.m2.sid.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
+import javax.persistence.OneToMany;
+
+@Entity
+@Inheritance(strategy=InheritanceType.TABLE_PER_CLASS)
 public abstract class Laboratoire {
 
+	@Id
 	private String nom;
 	private double ca;
+	@OneToMany(mappedBy="laboratoire")
 	private List<Lot> stocks;
 	/**
 	 * 

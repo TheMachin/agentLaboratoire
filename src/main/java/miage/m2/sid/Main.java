@@ -21,6 +21,7 @@ public class Main {
 	
 	public static void main (String[] args) 
     {
+		EntityManager.init();
 		try {
 			Runtime runtime = Runtime.instance();
 			jade.util.leap.Properties properties = new ExtendedProperties();
@@ -44,6 +45,7 @@ public class Main {
 			e.printStackTrace();
 		}
 		//AgentLaboratoireGrandGroupe agentLabo = new AgentLaboratoireGrandGroupe();
+		
     }
 	
 	
