@@ -16,8 +16,13 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
     @Override
     public void action() {
         ACLMessage aclMessage = myAgent.receive();
+        
         if (aclMessage != null) {
             try {
+            	System.out.println("Réception du nouveau message");
+                System.out.println("Acte de communication");
+                System.out.println("Language "+aclMessage.getLanguage());
+                System.out.println("Onthology "+aclMessage.getOntology());
                 String message = aclMessage.getContent();
                 System.out.println(myAgent.getLocalName() + ": I receive message\n" +
                         aclMessage + "\nwith content\n" + message);

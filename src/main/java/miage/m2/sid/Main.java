@@ -1,5 +1,7 @@
 package miage.m2.sid;
 
+import java.util.Date;
+
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -9,6 +11,10 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 import miage.m2.sid.agent.AgentLaboratoireGenerique;
 import miage.m2.sid.agent.AgentLaboratoireGrandGroupe;
+import miage.m2.sid.model.Generique;
+import miage.m2.sid.model.Laboratoire;
+import miage.m2.sid.model.Lot;
+import miage.m2.sid.model.Maladie;
 
 public class Main {
 	
@@ -25,8 +31,10 @@ public class Main {
 			AgentContainer agentContainer = runtime.createMainContainer(profileImpl);
 			AgentController agentLabo = agentContainer
 					.createNewAgent("AgentLabo", AgentLaboratoireGrandGroupe.class.getName(), null);
+			Generique[] generique = new Generique[1];
+			generique[0]=jeuEssaisGenerique();
 			AgentController agentLaboGeneric = agentContainer
-					.createNewAgent("AgentLaboGenerique", AgentLaboratoireGenerique.class.getName(), null);
+					.createNewAgent("AgentLaboGenerique", AgentLaboratoireGenerique.class.getName(), generique);
 			
 			agentLabo.start();
 			agentLaboGeneric.start();
@@ -36,5 +44,18 @@ public class Main {
 		}
 		//AgentLaboratoireGrandGroupe agentLabo = new AgentLaboratoireGrandGroupe();
     }
+	
+	
+	public static  Generique jeuEssaisGenerique(){
+		Laboratoire labo = new Generique(30.0);
+		labo.setNom("Le générique de l'ouest");
+		Lot l1 = new Lot("Vaccin rage", new Date(), 100.0, 10, 30.0, labo, new Maladie("Rage"));
+		l1.setLaboratoire(labo);
+		Lot l2 = new Lot("Vaccin rage", new Date(), 100.0, 10, 30.0, labo, new Maladie("Rage"));
+		l1.setLaboratoire(labo);
+		labo.addLot(l1);
+		labo.addLot(l2);
+		return (Generique) labo;
+	}
 	
 }
