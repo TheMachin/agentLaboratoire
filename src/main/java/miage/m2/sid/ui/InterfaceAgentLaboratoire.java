@@ -11,7 +11,7 @@ public class InterfaceAgentLaboratoire{
 	
 	
 	
-	public void setLaboratoireName(String name){
+	public void setLaboratoireName(final String name){
 		Platform.runLater(new Runnable() {
 
 			@Override
@@ -22,7 +22,7 @@ public class InterfaceAgentLaboratoire{
 		});
 	}
 	
-	public void setCA(double ca){
+	public void setCA(final double ca){
 		Platform.runLater(new Runnable() {
 
 			@Override
