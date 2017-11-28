@@ -1,20 +1,13 @@
 package miage.m2.sid;
 
-import java.util.Date;
-import java.util.GregorianCalendar;
-
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.util.ExtendedProperties;
 import jade.wrapper.AgentContainer;
-import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
-import miage.m2.sid.agent.AgentLaboratoireGenerique;
-import miage.m2.sid.agent.AgentLaboratoireGrandGroupe;
 import miage.m2.sid.model.Generique;
 import miage.m2.sid.model.Laboratoire;
-import miage.m2.sid.model.Lot;
 
 public class Main {
 	

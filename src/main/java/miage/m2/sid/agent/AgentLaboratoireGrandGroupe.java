@@ -2,18 +2,20 @@ package miage.m2.sid.agent;
 
 
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import miage.m2.sid.behaviour.BehaviourLaboratoireGrandGroupe;
+import miage.m2.sid.behaviour.LaboGrandGroupeResponder;
 import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.model.container.LaboratoireGrandGroupeContainer;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
 public class AgentLaboratoireGrandGroupe extends Agent{
 
-	private BehaviourLaboratoireGrandGroupe behaviour;
+	private Behaviour behaviour;
 	private LaboratoireGrandGroupeContainer container;
 	private InterfaceAgentLaboratoire gui;
 	private Laboratoire laboratoire = null;
@@ -31,9 +33,10 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		System.out.println(laboratoire.getNom());
 		System.out.println(this.getName()+" "+this.getAID()+" started");
 		
-		this.behaviour = new BehaviourLaboratoireGrandGroupe(this, gui, laboratoire);
+		//this.behaviour = new BehaviourLaboratoireGrandGroupe(this, gui, laboratoire);
+		this.behaviour = new LaboGrandGroupeResponder(this, null);
 		registerService();
-		addBehaviour(behaviour);		
+		addBehaviour(behaviour);
 	}
 
 	private void registerService() {
