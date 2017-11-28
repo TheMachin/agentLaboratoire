@@ -21,7 +21,8 @@ public class Main {
 	
 	public static void main (String[] args) 
     {
-		EntityManager.init();
+		//EntityManager.init();
+		//EntityManager.close();
 		try {
 			Runtime runtime = Runtime.instance();
 			jade.util.leap.Properties properties = new ExtendedProperties();
@@ -31,31 +32,25 @@ public class Main {
 			profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
 			profileImpl.setParameter(ProfileImpl.MAIN_PORT, "1099");
 			AgentContainer agentContainer = runtime.createMainContainer(profileImpl);
-			AgentController agentLabo = agentContainer
-					.createNewAgent("AgentLabo", AgentLaboratoireGrandGroupe.class.getName(), null);
-			Generique[] generique = new Generique[1];
-			generique[0]=jeuEssaisGenerique();
-			AgentController agentLaboGeneric = agentContainer
-					.createNewAgent("AgentLaboGenerique", AgentLaboratoireGenerique.class.getName(), generique);
+			agentContainer.start();
 			
-			agentLabo.start();
-			agentLaboGeneric.start();
 		} catch (ControllerException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		//AgentLaboratoireGrandGroupe agentLabo = new AgentLaboratoireGrandGroupe();
 		
     }
 	
 	
 	private static  Generique jeuEssaisGenerique(){
-		Laboratoire labo = new Generique(30.0);
+		Laboratoire labo = new Generique();
 		labo.setNom("Le générique de l'ouest");
-		Lot l1 = new Lot("Vaccin rage", new GregorianCalendar(2017, 10, 10).getTime(), 100.0, 10, 30.0, new Maladie("Rage"));
-		Lot l2 = new Lot("Vaccin rage", new GregorianCalendar(2017, 1, 31).getTime(), 100.0, 10, 30.0, new Maladie("Rage"));
+		Maladie m = new Maladie();
+		m.setNom("Rage");
+		/*Lot l1 = new Lot("Vaccin rage", new GregorianCalendar(2017, 10, 10).getTime(), 100.0, 10, 30.0, m);
+		Lot l2 = new Lot("Vaccin rage", new GregorianCalendar(2017, 1, 31).getTime(), 100.0, 10, 30.0, m);
 		labo.addLot(l1);
-		labo.addLot(l2);
+		labo.addLot(l2);*/
 		return (Generique) labo;
 	}
 	

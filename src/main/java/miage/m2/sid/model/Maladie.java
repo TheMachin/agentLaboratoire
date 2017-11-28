@@ -13,12 +13,8 @@ public class Maladie {
 	private String nom;
 	@OneToOne(fetch=FetchType.LAZY, mappedBy="maladie")
 	private Lot lot;
-	/**
-	 * @param nom
-	 */
-	public Maladie(String nom) {
-		this.nom = nom;
-	}
+
+	
 	public String getNom() {
 		return nom;
 	}

@@ -24,23 +24,9 @@ public class Lot {
 	@OneToOne
 	@JoinColumn(name="maladie_name")
 	private Maladie maladie;
-	/**
-	 * @param nom
-	 * @param dateDLU
-	 * @param prix
-	 * @param nombre
-	 * @param volume
-	 * @param maladie
-	 */
-	public Lot(String nom, Date dateDLU, double prix, int nombre, double volume, Maladie maladie) {
-		this.nom = nom;
-		this.dateDLU = dateDLU;
-		this.prix = prix;
-		this.nombre = nombre;
-		this.volume = volume;
-		this.laboratoire = laboratoire;
-		this.maladie = maladie;
-	}
+	
+	
+	
 	public String getNom() {
 		return nom;
 	}

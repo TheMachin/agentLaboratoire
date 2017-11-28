@@ -4,15 +4,9 @@ import javax.persistence.Entity;
 
 @Entity
 public class Generique extends Laboratoire{
-	private double maxRabais;
+	private double maxRabais = 30.0;
 
-	/**
-	 * @param maxRabais
-	 */
-	public Generique(double maxRabais) {
-		this.maxRabais = maxRabais;
-	}
-
+	
 	public double getMaxRabais() {
 		return maxRabais;
 	}
