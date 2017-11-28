@@ -13,7 +13,7 @@ import javax.persistence.OneToOne;
 public class Lot {
 	@Id
 	private String nom;
-	private Date dateDLU;
+	private Date dateDLC;
 	private double prix;
 	private int nombre;
 	private double volume;
@@ -22,8 +22,8 @@ public class Lot {
 	@JoinColumn(name="laboratoire_id")
 	private Laboratoire laboratoire;
 	@OneToOne
-	@JoinColumn(name="maladie_name")
-	private Maladie maladie;
+	@JoinColumn(name="vaccin_name")
+	private Vaccin vaccin;
 	
 	
 	
@@ -33,11 +33,11 @@ public class Lot {
 	public void setNom(String nom) {
 		this.nom = nom;
 	}
-	public Date getDateDLU() {
-		return dateDLU;
+	public Date getDateDLC() {
+		return dateDLC;
 	}
-	public void setDateDLU(Date dateDLU) {
-		this.dateDLU = dateDLU;
+	public void setDateDLC(Date dateDLU) {
+		this.dateDLC = dateDLU;
 	}
 	public double getPrix() {
 		return prix;
@@ -60,14 +60,12 @@ public class Lot {
 	public Laboratoire getLaboratoire() {
 		return laboratoire;
 	}
-	public Maladie getMaladie() {
-		return maladie;
+	public Vaccin getVaccin() {
+		return vaccin;
 	}
-	public void setMaladie(Maladie maladie) {
-		this.maladie = maladie;
+	public void setVaccin(Vaccin vaccin) {
+		this.vaccin = vaccin;
 	}
-
-
 	public void setLaboratoire(Laboratoire laboratoire) {
 		this.laboratoire = laboratoire;
 	}

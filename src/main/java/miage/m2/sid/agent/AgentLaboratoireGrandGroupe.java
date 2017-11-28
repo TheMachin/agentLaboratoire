@@ -7,7 +7,7 @@ import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import miage.m2.sid.behaviour.BehaviourLaboratoireGrandGroupe;
-import miage.m2.sid.model.GrandGroupe;
+import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.model.container.LaboratoireGrandGroupeContainer;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
@@ -16,13 +16,13 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 	private BehaviourLaboratoireGrandGroupe behaviour;
 	private LaboratoireGrandGroupeContainer container;
 	private InterfaceAgentLaboratoire gui;
-	private GrandGroupe laboratoire = null;
+	private Laboratoire laboratoire = null;
 	private DFAgentDescription dfd;
 
 	protected void setup(){
 		//initialisation de l'agent
 		container = (LaboratoireGrandGroupeContainer) getArguments()[0];
-		laboratoire = (GrandGroupe) getArguments()[1];
+		laboratoire = (Laboratoire) getArguments()[1];
 		if(laboratoire==null){
 			System.out.println("fail");
 		}

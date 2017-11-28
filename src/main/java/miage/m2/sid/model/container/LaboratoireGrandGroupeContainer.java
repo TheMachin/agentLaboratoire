@@ -22,7 +22,7 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.agent.AgentLaboratoireGrandGroupe;
-import miage.m2.sid.model.GrandGroupe;
+import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
 public class LaboratoireGrandGroupeContainer extends Application{
@@ -30,7 +30,7 @@ public class LaboratoireGrandGroupeContainer extends Application{
 	private Stage primaryStage;
 	private AgentLaboratoireGrandGroupe agentGrandGroupe;
 	private InterfaceAgentLaboratoire gui;
-	private GrandGroupe laboratoire;
+	private Laboratoire laboratoire;
 	
 	public static void main (String[] args) 
     {
@@ -44,7 +44,7 @@ public class LaboratoireGrandGroupeContainer extends Application{
 		Query q = em.createQuery(r);
 		q.setParameter("nom", "Un grand labo");
 		laboratoire = (GrandGroupe) q.getSingleResult();*/
-		laboratoire = new GrandGroupe();
+		laboratoire = new Laboratoire();
 		laboratoire.setCa(0);
 		laboratoire.setNom("Un grand labo");
 		
@@ -73,7 +73,7 @@ public class LaboratoireGrandGroupeContainer extends Application{
 		this.primaryStage.setTitle("Gui Agent laboratoire grand groupe");
 		Parent root = null;
 		
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("AgentLaboratoire.fxml"));
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/AgentLaboratoire.fxml"));
 		gui = new InterfaceAgentLaboratoire();
 		loader.setController(gui);
 		try {

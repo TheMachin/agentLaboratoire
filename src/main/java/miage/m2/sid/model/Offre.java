@@ -10,6 +10,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 @Entity
 public class Offre {
 	@Id
@@ -22,8 +23,8 @@ public class Offre {
 	private Date dateAchat;
 	private Date dateDebutOffre;
 	
-	@OneToMany
-	private List<Lot> lots;
+	@OneToOne
+	private Lot lot;
 	@ManyToOne
 	@JoinColumn(name="association_name")
 	private Association association;
@@ -67,11 +68,12 @@ public class Offre {
 	public void setDateAchat(Date dateAchat) {
 		this.dateAchat = dateAchat;
 	}
-	public List<Lot> getLots() {
-		return lots;
+	
+	public Lot getLot() {
+		return lot;
 	}
-	public void setLots(List<Lot> lots) {
-		this.lots = lots;
+	public void setLot(Lot lot) {
+		this.lot = lot;
 	}
 	public Association getAssociation() {
 		return association;

@@ -11,7 +11,7 @@ import javax.persistence.OneToMany;
 
 @Entity
 @Inheritance(strategy=InheritanceType.TABLE_PER_CLASS)
-public abstract class Laboratoire {
+public class Laboratoire {
 
 	@Id
 	private String nom;

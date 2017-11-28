@@ -17,7 +17,7 @@ public class Echanges {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private Date date;
-	private double prix;
+	private double prixUnitaire;
 	
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="echange_id")
@@ -35,11 +35,11 @@ public class Echanges {
 	public void setDate(Date date) {
 		this.date = date;
 	}
-	public double getPrix() {
-		return prix;
+	public double getPrixUnitaire() {
+		return prixUnitaire;
 	}
-	public void setPrix(double prix) {
-		this.prix = prix;
+	public void setPrixUnitaire(double prix) {
+		this.prixUnitaire = prix;
 	}
 	public Offre getOffre() {
 		return offre;

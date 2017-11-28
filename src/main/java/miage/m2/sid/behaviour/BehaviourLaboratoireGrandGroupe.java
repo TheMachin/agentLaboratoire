@@ -1,12 +1,10 @@
 package miage.m2.sid.behaviour;
 
-import java.util.ArrayList;
+
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Query;
-import javax.swing.AbstractListModel;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -18,20 +16,18 @@ import jade.lang.acl.ACLMessage;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.model.Association;
 import miage.m2.sid.model.Echanges;
-import miage.m2.sid.model.GrandGroupe;
 import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.model.Lot;
-import miage.m2.sid.model.Maladie;
 import miage.m2.sid.model.Offre;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
 public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
     private Gson gson;
     private javax.persistence.EntityManager em = EntityManager.getInstance();
-    private GrandGroupe laboratoire; 
+    private Laboratoire laboratoire; 
     private InterfaceAgentLaboratoire gui;
     
-    public BehaviourLaboratoireGrandGroupe(Agent agent, InterfaceAgentLaboratoire gui, GrandGroupe laboratoire) {
+    public BehaviourLaboratoireGrandGroupe(Agent agent, InterfaceAgentLaboratoire gui, Laboratoire laboratoire) {
         super(agent);
         this.gson = new Gson();
         this.laboratoire=laboratoire;
@@ -61,35 +57,29 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 if(aclMessage.getOntology().equals("demande")||aclMessage.getPerformative()==ACLMessage.PROPAGATE){
                 	String status = map.get("devis");
                 	if(status.equals("demande")){
-                		int nombre = Integer.parseInt(map.get("nombre"));
-                		Date delais = new Date(Long.parseLong(map.get("delais")));
-                		double volume = Double.parseDouble(map.get("volume"));
-                		String maladie = map.get("vaccin");
+                		int nombre = Integer.parseInt(map.get("nb"));
+                		Date dateLimite = (Date) gson.fromJson("date", Date.class);
+                		String maladie = map.get("maladie");
                 		String association = map.get("association");
                 		
                 		Offre offre = new Offre();
                 		Association asso = new Association();
                 		asso.setNom(association);
                 		offre.setAssociation(asso);
-                		offre.setDateLimite(delais);
+                		offre.setDateLimite(dateLimite);
                 		offre.setNombre(nombre);
                 		offre.setDateDebutOffre(new Date());
                 		
-                		Maladie m = new Maladie();
-                		m.setNom(maladie);
+                		
                 		
                 		Lot lot = null;
                 		lot = new Lot();
-            			lot.setDateDLU(delais);
-            			lot.setMaladie(m);
+            			lot.setDateDLC(dateLimite);
+            			//lot.setMaladie(m);
             			lot.setNombre(nombre);
-            			lot.setVolume(volume);
+            			lot.setVolume(30.0);
             			lot.setLaboratoire(laboratoire);
             			lot.setPrix(5000.0+nombre);
-            			List<Lot> lots = new ArrayList<Lot>();
-            			for(int i=0;i<nombre;i++){
-            				lots.add(lot);
-            			}
             			
             			
             			
@@ -111,16 +101,15 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 			
                 		}else{*/
                 			
-            			offre.setLots(lots);
+            			offre.setLot(lot);
             			Echanges echange = new Echanges();
             			echange.setDate(new Date());
             			echange.setOffre(offre);
-            			double prixBase = (lot.getPrix()*nombre);
+            			double prixBase = lot.getPrix();
             			double marge = prixBase * 0.4;
-            			echange.setPrix(prixBase+marge);
+            			echange.setPrixUnitaire(prixBase+marge);
             			
             			em.getTransaction().begin();
-            			em.persist(m);
             			em.persist(asso);
             			em.persist(lot);
             			em.persist(echange);
@@ -129,13 +118,14 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
             			em.getTransaction().commit();
             			
             			JsonObject response = new JsonObject();
+            			
             			response.addProperty("Laboratoire", laboratoire.getNom());
             			response.addProperty("devis", "propose");
-            			response.addProperty("vaccin", m.getNom());
+            			response.addProperty("vaccin", "");
             			response.addProperty("nombre", String.valueOf(nombre));
-            			response.addProperty("volume", String.valueOf(volume));
-            			response.addProperty("prix", echange.getPrix());
-            			response.addProperty("dateDLU", String.valueOf(lot.getDateDLU().getTime()));
+            			response.addProperty("volume", String.valueOf(lot.getVolume()));
+            			response.addProperty("prixUnitaire", echange.getPrixUnitaire());
+            			response.addProperty("dateDLU", String.valueOf(lot.getDateDLC().getTime()));
             			response.addProperty("noDosser", offre.getId());
             			ACLMessage reply = aclMessage.createReply();
             			reply.setPerformative(ACLMessage.PROPOSE);
@@ -146,7 +136,7 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 	Offre offre = null;
             		
             		if(map.containsKey("noDossier")){
-            			String r = "Select o FROM Offre l WHERE o.id=:id";
+            			String r = "Select o FROM Offre o WHERE o.id=:id";
                 		Query q = em.createQuery(r);
                 		q.setParameter("id", map.get("noDossier"));
                 		offre = (Offre) q.setMaxResults(1).getSingleResult();
@@ -159,7 +149,7 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 		}else{
                 			Echanges echange = new Echanges();
                 			echange.setDate(new Date());
-                			echange.setPrix(offre.getEchanges().get(0).getPrix());
+                			echange.setPrixUnitaire(offre.getEchanges().get(0).getPrixUnitaire());
                 			echange.setOffre(offre);
                 			
                 			em.getTransaction().begin();
@@ -169,11 +159,11 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 			JsonObject response = new JsonObject();
                 			response.addProperty("Laboratoire", laboratoire.getNom());
                 			response.addProperty("devis", "propose");
-                			response.addProperty("vaccin", offre.getLots().get(0).getNom());
+                			response.addProperty("vaccin", offre.getLot().getNom());
                 			response.addProperty("nombre", String.valueOf(offre.getNombre()));
-                			response.addProperty("volume", String.valueOf(offre.getLots().get(0).getVolume()));
-                			response.addProperty("prix", echange.getPrix());
-                			response.addProperty("dateDLU", String.valueOf(offre.getLots().get(0).getDateDLU().getTime()));
+                			response.addProperty("volume", String.valueOf(offre.getLot().getVolume()));
+                			response.addProperty("prix", echange.getPrixUnitaire());
+                			response.addProperty("dateDLU", String.valueOf(offre.getLot().getDateDLC().getTime()));
                 			response.addProperty("noDosser", offre.getId());
                 			ACLMessage reply = aclMessage.createReply();
                 			reply.setPerformative(ACLMessage.PROPOSE);
@@ -186,18 +176,18 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 		
                 		offre.setAccepte(true);
                 		offre.setDateAchat(new Date());
-                		double prix = offre.getEchanges().get(offre.getEchanges().size()-1).getPrix();
+                		double prix = offre.getEchanges().get(offre.getEchanges().size()-1).getPrixUnitaire();
                 		offre.setPrix(prix);
                 		laboratoire.setCa(laboratoire.getCa()+offre.getPrix());
                 		
                 		JsonObject response = new JsonObject();
             			response.addProperty("Laboratoire", laboratoire.getNom());
             			response.addProperty("devis", "accepte");
-            			response.addProperty("vaccin", offre.getLots().get(0).getNom());
+            			response.addProperty("vaccin", offre.getLot().getNom());
             			response.addProperty("nombre", String.valueOf(offre.getNombre()));
-            			response.addProperty("volume", String.valueOf(offre.getLots().get(0).getVolume()));
+            			response.addProperty("volume", String.valueOf(offre.getLot().getVolume()));
             			response.addProperty("prix", prix);
-            			response.addProperty("dateDLU", String.valueOf(offre.getLots().get(0).getDateDLU().getTime()));
+            			response.addProperty("dateDLU", String.valueOf(offre.getLot().getDateDLC().getTime()));
             			response.addProperty("noDosser", offre.getId());
             			ACLMessage reply = aclMessage.createReply();
             			reply.setPerformative(ACLMessage.CONFIRM);

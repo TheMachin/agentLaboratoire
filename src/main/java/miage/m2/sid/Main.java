@@ -15,7 +15,6 @@ import miage.m2.sid.agent.AgentLaboratoireGrandGroupe;
 import miage.m2.sid.model.Generique;
 import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.model.Lot;
-import miage.m2.sid.model.Maladie;
 
 public class Main {
 	
@@ -45,8 +44,6 @@ public class Main {
 	private static  Generique jeuEssaisGenerique(){
 		Laboratoire labo = new Generique();
 		labo.setNom("Le générique de l'ouest");
-		Maladie m = new Maladie();
-		m.setNom("Rage");
 		/*Lot l1 = new Lot("Vaccin rage", new GregorianCalendar(2017, 10, 10).getTime(), 100.0, 10, 30.0, m);
 		Lot l2 = new Lot("Vaccin rage", new GregorianCalendar(2017, 1, 31).getTime(), 100.0, 10, 30.0, m);
 		labo.addLot(l1);
