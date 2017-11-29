@@ -6,6 +6,7 @@ import jade.core.Runtime;
 import jade.util.ExtendedProperties;
 import jade.wrapper.AgentContainer;
 import jade.wrapper.ControllerException;
+import miage.m2.sid.excel.model.PoiVaccinDao;
 import miage.m2.sid.model.Generique;
 import miage.m2.sid.model.Laboratoire;
 
@@ -13,8 +14,9 @@ public class Main {
 	
 	public static void main (String[] args) 
     {
-		//EntityManager.init();
+		EntityManager.init();
 		//EntityManager.close();
+        getAllSickFormSheet("/sheet/maladie.xlsx");
 		try {
 			Runtime runtime = Runtime.instance();
 			jade.util.leap.Properties properties = new ExtendedProperties();
@@ -43,5 +45,11 @@ public class Main {
 		labo.addLot(l2);*/
 		return (Generique) labo;
 	}
+
+	private static void getAllSickFormSheet(String fileName){
+        PoiVaccinDao poiVaccinDao = new PoiVaccinDao(fileName);
+        poiVaccinDao.setAllMaladie();
+
+    }
 	
 }
