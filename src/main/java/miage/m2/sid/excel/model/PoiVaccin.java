@@ -14,13 +14,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PoiVaccinDao {
+public class PoiVaccin {
 
     private String fileName;
     private javax.persistence.EntityManager em = EntityManager.getInstance();
 
 
-    public PoiVaccinDao(String fileName) {
+    public PoiVaccin(String fileName) {
         this.fileName = fileName;
     }
 

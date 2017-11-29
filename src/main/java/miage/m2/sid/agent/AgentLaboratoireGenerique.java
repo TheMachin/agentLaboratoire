@@ -18,8 +18,8 @@ public class AgentLaboratoireGenerique extends Agent{
 		if(generique!=null){
 			labo=(Generique) generique[0];
 			System.out.println(labo.getNom());
-			long date = new Date().getTime()-labo.getStocks().get(0).getDateDLC().getTime();
-			System.out.println(simpleDateFormat.format(labo.getStocks().get(0).getDateDLC()));
+			long date = new Date().getTime()-labo.getLots().get(0).getDateDLC().getTime();
+			System.out.println(simpleDateFormat.format(labo.getLots().get(0).getDateDLC()));
 			System.out.println("Jours diff "+TimeUnit.DAYS.convert(date, TimeUnit.MILLISECONDS));
 		}
 		//initialisation de l'agent

@@ -12,7 +12,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import miage.m2.sid.EntityManager;
 import miage.m2.sid.agent.AgentLaboratoireGrandGroupe;
+import miage.m2.sid.agent.AgentLogistique;
 import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
@@ -26,6 +28,7 @@ public class LaboratoireGrandGroupeContainer extends Application {
     private Laboratoire laboratoire;
 
     public static void main(String[] args) {
+        EntityManager.init();
         launch(LaboratoireGrandGroupeContainer.class);
     }
 
@@ -51,7 +54,11 @@ public class LaboratoireGrandGroupeContainer extends Application {
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
             AgentController agentLabo = agentContainer
                     .createNewAgent("Agent " + laboratoire.getNom(), AgentLaboratoireGrandGroupe.class.getName(), new Object[]{this, laboratoire});
+
+            AgentController agentLogistique = agentContainer.createNewAgent("Agent logistique", AgentLogistique.class.getName(),null);
+
             agentLabo.start();
+            agentLogistique.start();
         } catch (ControllerException e) {
             //Logger.log(Level.FATAL,e.toString(),e);
         }
