@@ -27,7 +27,6 @@ public class PoiVaccinDao {
     public void setAllMaladie() {
 
         URL url = this.getClass().getResource(fileName);
-        System.out.println(url.getPath());
         File file=null;
         file = new File(url.getPath());
         try{
@@ -54,7 +53,7 @@ public class PoiVaccinDao {
         Vaccin vaccin = new Vaccin();
         vaccin.setNom(row.getCell(0).getStringCellValue());
         vaccin.setVolume(Double.parseDouble(row.getCell(1).getStringCellValue()));
-        vaccin.setPrix(20);
+        vaccin.setPrix(Double.parseDouble(row.getCell(2).getStringCellValue().toString()));
 
         em.getTransaction().begin();
         em.merge(vaccin);
