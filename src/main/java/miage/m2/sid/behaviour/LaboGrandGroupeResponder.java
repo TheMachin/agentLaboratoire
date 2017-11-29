@@ -1,13 +1,19 @@
 package miage.m2.sid.behaviour;
 
+import com.google.gson.Gson;
 import jade.core.Agent;
 import jade.core.behaviours.DataStore;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
+import miage.m2.sid.dummy.CFP;
+import miage.m2.sid.dummy.Propose;
+
+import java.util.Date;
 
 public class LaboGrandGroupeResponder extends ContractNetResponder {
 
@@ -31,11 +37,24 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
-        System.out.println("Called : handleCfp");
+        System.out.println("GRAND GROUPE Called : handleCfp");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
-        return super.handleCfp(cfp);
+
+        Gson gson = new Gson();
+        CFP messageReceived = gson.fromJson(cfp.getContent(), CFP.class);
+
+        // TODO: 29/11/2017 select prix du vaccin from db
+        int prixVaccin = 40;
+        int prixTotal = messageReceived.getNb() * prixVaccin;
+        Propose proposition = new Propose(messageReceived.getNb(), prixTotal, messageReceived.getDate(), new Date());
+
+        ACLMessage replyMessage = cfp.createReply();
+        replyMessage.setContent(gson.toJson(proposition));
+        replyMessage.setPerformative(ACLMessage.PROPOSE);
+
+        return replyMessage;
     }
 
     /*

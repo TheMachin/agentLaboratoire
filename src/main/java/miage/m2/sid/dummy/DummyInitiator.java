@@ -1,5 +1,6 @@
 package miage.m2.sid.dummy;
 
+import com.google.gson.Gson;
 import jade.core.Agent;
 import jade.core.behaviours.DataStore;
 import jade.lang.acl.ACLMessage;
@@ -14,10 +15,6 @@ public class DummyInitiator extends ContractNetInitiator {
         super(a, cfp);
     }
 
-    public DummyInitiator(Agent a, ACLMessage cfp, DataStore store) {
-        super(a, cfp, store);
-    }
-
     @Override
     protected void handleAllResponses(Vector responses, Vector acceptances) {
         System.out.println("--------" + responses.size() + "responses");
@@ -25,10 +22,19 @@ public class DummyInitiator extends ContractNetInitiator {
         List<ACLMessage> proposeResponse = new ArrayList<ACLMessage>();
         for (Object response : responses) {
             ACLMessage reponseMessage = (ACLMessage) response;
-            System.out.println("Response : "+response.toString());
+            System.out.println("Response : " + response.toString());
             if (reponseMessage.getPerformative() == ACLMessage.PROPOSE) {
                 proposeResponse.add(reponseMessage);
+                sendResponse(reponseMessage);
+
             }
         }
+    }
+
+    private void sendResponse(ACLMessage response) {
+        Gson gson = new Gson();
+        ACLMessage agree = response.createReply();
+        agree.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+        this.myAgent.send(agree);
     }
 }
