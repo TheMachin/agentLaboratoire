@@ -1,30 +1,33 @@
 package miage.m2.sid.dummy;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class Propose {
+public class Propose implements Serializable {
 
-    private Integer nb;
+    private Integer nombre;
     private Integer prix;
-    private Date dateDebut;
-    private Date dateFin;
+    private Date dateLivraison;
+    private Date datePeremption;
+    private double volume;
 
     public Propose() {
     }
 
-    public Propose(Integer nb, Integer prix, Date dateDebut, Date dateFin) {
-        this.nb = nb;
+    public Propose(Integer nombre, Integer prix, Date dateLivraison, Date datePeremption, int volume) {
+        this.nombre = nombre;
         this.prix = prix;
-        this.dateDebut = dateDebut;
-        this.dateFin = dateFin;
+        this.dateLivraison = dateLivraison;
+        this.datePeremption = datePeremption;
+        this.volume = volume;
     }
 
-    public Integer getNb() {
-        return nb;
+    public Integer getNombre() {
+        return nombre;
     }
 
-    public void setNb(Integer nb) {
-        this.nb = nb;
+    public void setNombre(Integer nombre) {
+        this.nombre = nombre;
     }
 
     public Integer getPrix() {
@@ -35,19 +38,38 @@ public class Propose {
         this.prix = prix;
     }
 
-    public Date getDateDebut() {
-        return dateDebut;
+    public Date getDateLivraison() {
+        return dateLivraison;
     }
 
-    public void setDateDebut(Date dateDebut) {
-        this.dateDebut = dateDebut;
+    public void setDateLivraison(Date dateLivraison) {
+        this.dateLivraison = dateLivraison;
     }
 
-    public Date getDateFin() {
-        return dateFin;
+    public Date getDatePeremption() {
+        return datePeremption;
     }
 
-    public void setDateFin(Date dateFin) {
-        this.dateFin = dateFin;
+    public void setDatePeremption(Date datePeremption) {
+        this.datePeremption = datePeremption;
+    }
+
+    public double getVolume() {
+        return volume;
+    }
+
+    public void setVolume(double volume) {
+        this.volume = volume;
+    }
+
+    @Override
+    public String toString() {
+        return "Propose{" +
+                "nombre=" + nombre +
+                ", prix=" + prix +
+                ", dateLivraison=" + dateLivraison +
+                ", datePeremption=" + datePeremption +
+                ", volume=" + volume +
+                '}';
     }
 }

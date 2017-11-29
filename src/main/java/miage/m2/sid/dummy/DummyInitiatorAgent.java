@@ -3,7 +3,6 @@ package miage.m2.sid.dummy;
 import com.google.gson.Gson;
 import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -11,7 +10,10 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 
 public class DummyInitiatorAgent extends Agent {
     private DummyInitiator behaviour;
@@ -53,7 +55,7 @@ public class DummyInitiatorAgent extends Agent {
 
     ACLMessage initiate(){
         Gson gson = new Gson();
-        CFP cfp = new CFP("rage",15, new Date());
+        CFP cfp = new CFP("grippe",15, new Date());
 
         ACLMessage message = new ACLMessage(ACLMessage.CFP);
         message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
@@ -75,6 +77,7 @@ public class DummyInitiatorAgent extends Agent {
         message.setContent(gson.toJson(cfp));
         message.setSender(this.getAID());
         message.addReceiver(receiverAid);
+
 
         behaviour.reset(message);
         //send(message);

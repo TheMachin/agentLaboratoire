@@ -6,13 +6,16 @@ import jade.core.behaviours.DataStore;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
-import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
+import miage.m2.sid.EntityManager;
 import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
+import miage.m2.sid.model.Vaccin;
 
+import javax.persistence.Query;
+import java.util.Calendar;
 import java.util.Date;
 
 public class LaboGrandGroupeResponder extends ContractNetResponder {
@@ -42,19 +45,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
 
-        Gson gson = new Gson();
-        CFP messageReceived = gson.fromJson(cfp.getContent(), CFP.class);
-
-        // TODO: 29/11/2017 select prix du vaccin from db
-        int prixVaccin = 40;
-        int prixTotal = messageReceived.getNb() * prixVaccin;
-        Propose proposition = new Propose(messageReceived.getNb(), prixTotal, messageReceived.getDate(), new Date());
-
-        ACLMessage replyMessage = cfp.createReply();
-        replyMessage.setContent(gson.toJson(proposition));
-        replyMessage.setPerformative(ACLMessage.PROPOSE);
-
-        return replyMessage;
+        return createProposition(cfp);
     }
 
     /*
@@ -117,5 +108,37 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
     @Override
     protected void sessionTerminated() {
         super.sessionTerminated();
+    }
+
+    private ACLMessage createProposition(ACLMessage messageReceived){
+        Gson gson = new Gson();
+        CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
+
+        // TODO: 29/11/2017 select prix du vaccin from db
+        Vaccin vaccin = getVaccinByName(cfp.getMaladie());
+        int prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
+        int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
+
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(new Date());
+        cal.add(Calendar.YEAR, 1); // Add 1 year to current date
+
+        // Create proposition
+        Propose proposition = new Propose(cfp.getNb(), prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
+        System.out.println(proposition);
+
+        // Create reply
+        ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setContent(gson.toJson(proposition));
+        replyMessage.setPerformative(ACLMessage.PROPOSE);
+
+        return replyMessage;
+    }
+
+    private Vaccin getVaccinByName(String name){
+        String hql = "FROM Vaccin V WHERE V.nom = :name";
+        Query query = EntityManager.getInstance().createQuery(hql);
+        query.setParameter("name",name);
+        return (Vaccin)query.getSingleResult();
     }
 }
