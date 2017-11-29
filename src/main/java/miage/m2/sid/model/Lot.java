@@ -22,7 +22,6 @@ public class Lot {
 	@JoinColumn(name="laboratoire_id")
 	private Laboratoire laboratoire;
 	@OneToOne
-	@JoinColumn(name="vaccin_name")
 	private Vaccin vaccin;
 	
 	

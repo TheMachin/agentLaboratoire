@@ -17,12 +17,14 @@ public class Laboratoire {
 	private String nom;
 	private double ca;
 	@OneToMany(mappedBy="laboratoire")
-	private List<Lot> stocks;
+	private List<Lot> lots;
+	@OneToMany
+	private List<Vaccin> stocks;
 	/**
 	 * 
 	 */
 	public Laboratoire() {
-		stocks = new ArrayList<Lot>();
+		lots = new ArrayList<Lot>();
 	}
 	public String getNom() {
 		return nom;
@@ -36,20 +38,34 @@ public class Laboratoire {
 	public void setCa(double ca) {
 		this.ca = ca;
 	}
-	public List<Lot> getStocks() {
-		return stocks;
+	public List<Lot> getLots() {
+		return lots;
 	}
-	public void setStocks(List<Lot> stocks) {
-		this.stocks = stocks;
+	public void setLots(List<Lot> stocks) {
+		this.lots = stocks;
 	}
 	
 	public void addLot(Lot lot){
-		this.stocks.add(lot);
+		this.lots.add(lot);
 		lot.setLaboratoire(this);
 	}
-	
-	public void deleteLot(Lot lot){
-		this.stocks.remove(lot);
+
+	public List<Vaccin> getStocks() {
+		return stocks;
 	}
-	
+
+	public void setStocks(List<Vaccin> stocks) {
+		this.stocks = stocks;
+	}
+
+	public void addVaccin(Vaccin vaccin){
+		this.stocks.add(vaccin);
+	}
+
+	public void removeVaccin(Vaccin vaccin){
+		if(stocks.contains(vaccin)){
+			stocks.remove(vaccin);
+		}
+	}
+
 }
