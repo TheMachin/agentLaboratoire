@@ -14,8 +14,6 @@ public class Laboratoire {
 	private double ca;
 	@OneToMany(mappedBy="laboratoire")
 	private List<Lot> lots;
-	@ManyToMany
-	private List<Vaccin> stocks;
 	/**
 	 * 
 	 */
@@ -46,22 +44,11 @@ public class Laboratoire {
 		lot.setLaboratoire(this);
 	}
 
-	public List<Vaccin> getStocks() {
-		return stocks;
-	}
-
-	public void setStocks(List<Vaccin> stocks) {
-		this.stocks = stocks;
-	}
-
-	public void addVaccin(Vaccin vaccin){
-		this.stocks.add(vaccin);
-	}
-
-	public void removeVaccin(Vaccin vaccin){
-		if(stocks.contains(vaccin)){
-			stocks.remove(vaccin);
+	public void removeLot(Lot lot){
+		if(lots.contains(lot)){
+			lots.remove(lot);
 		}
 	}
+
 
 }

@@ -179,17 +179,20 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
 
         Lot lot = new Lot();
         lot.setVolume(p.getVolume()*p.getNombre());
-        lot.setNombre(p.getNombre());
         lot.setPrix((double) (p.getPrix()*p.getNombre()));
         lot.setDateDLC(p.getDatePeremption());
         Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
-        lot.setVaccin(vaccin);
+        for(int i=0;i<cfpM.getNb();i++){
+            lot.addVaccin(vaccin);
+        }
+        List<Lot> lots = new ArrayList<Lot>();
+        lots.add(lot);
         Offre offre = new Offre();
         offre.setAccepte(true);
         offre.setDateDebutOffre(null);
         offre.setDateAchat(new Date());
         offre.setDateLimite(p.getDateLivraison());
-        offre.setLot(lot);
+        offre.setLots(lots);
         Association association = new Association();
         association.setNom(cfp.getSender().getName());
         offre.setAssociation(association);
@@ -217,6 +220,5 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Query query = EntityManager.getInstance().createQuery(hql);
         query.setParameter("name",this.myAgent.getName());
         return (Laboratoire) query.getSingleResult();
-    }
     }
 }

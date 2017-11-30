@@ -1,13 +1,9 @@
 package miage.m2.sid.model;
 
 import java.util.Date;
+import java.util.List;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
+import javax.persistence.*;
 
 @Entity
 public class Lot {
@@ -21,8 +17,8 @@ public class Lot {
 	@ManyToOne(fetch=FetchType.LAZY)
 	@JoinColumn(name="laboratoire_id")
 	private Laboratoire laboratoire;
-	@OneToOne
-	private Vaccin vaccin;
+	@OneToMany
+	private List<Vaccin> vaccins;
 	
 	
 	
@@ -59,12 +55,26 @@ public class Lot {
 	public Laboratoire getLaboratoire() {
 		return laboratoire;
 	}
-	public Vaccin getVaccin() {
-		return vaccin;
+
+	public List<Vaccin> getVaccins() {
+		return vaccins;
 	}
-	public void setVaccin(Vaccin vaccin) {
-		this.vaccin = vaccin;
+
+	public void setVaccins(List<Vaccin> vaccins) {
+		this.vaccins = vaccins;
 	}
+
+	public void addVaccin(Vaccin v){
+		//si le nom de vaccin est la meme
+		if(v.getNom().equals(this.nom)) {
+			//on ajoute vaccin + prix + nb + volume
+			vaccins.add(v);
+			this.nombre++;
+			this.volume+=v.getVolume();
+			this.prix+=v.getPrix();
+		}
+	}
+
 	public void setLaboratoire(Laboratoire laboratoire) {
 		this.laboratoire = laboratoire;
 	}

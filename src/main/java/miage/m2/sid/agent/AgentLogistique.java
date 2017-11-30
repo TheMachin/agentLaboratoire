@@ -10,9 +10,9 @@ public class AgentLogistique extends Agent {
 
     protected void setup(){
         /**
-         * on fixe une période de 3 jours
+         * on fixe une période de 10 secondes
          */
-        behaviour = new LogistiqueBehaviour(this,259200000);
+        behaviour = new LogistiqueBehaviour(this,10000);
 
         System.out.println(this.getName()+" "+this.getAID()+" started");
         addBehaviour(behaviour);

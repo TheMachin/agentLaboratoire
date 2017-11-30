@@ -36,9 +36,10 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
 
     @Override
     public void action() {
-        ACLMessage aclMessage = myAgent.receive();
+		ACLMessage aclMessage = myAgent.receive();
+
         
-        if (aclMessage != null) {
+        /*if (aclMessage != null) {
             try {
             	System.out.println("Réception du nouveau message");
                 System.out.println("Acte de communication");
@@ -54,7 +55,7 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 /**
                  * On recoit une demande de vaccin
                  */
-                if(aclMessage.getOntology().equals("demande")||aclMessage.getPerformative()==ACLMessage.PROPAGATE){
+                /*if(aclMessage.getOntology().equals("demande")||aclMessage.getPerformative()==ACLMessage.PROPAGATE){
                 	String status = map.get("devis");
                 	if(status.equals("demande")){
                 		int nombre = Integer.parseInt(map.get("nb"));
@@ -101,7 +102,7 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
                 			
                 		}else{*/
                 			
-            			offre.setLot(lot);
+            			/*offre.setLots(lot);
             			Echanges echange = new Echanges();
             			echange.setDate(new Date());
             			echange.setOffre(offre);
@@ -209,5 +210,6 @@ public class BehaviourLaboratoireGrandGroupe extends CyclicBehaviour {
         } else {
             this.block();
         }
+    */
     }
 }

@@ -23,8 +23,8 @@ public class Offre {
 	private Date dateAchat;
 	private Date dateDebutOffre;
 	
-	@OneToOne
-	private Lot lot;
+	@OneToMany
+	private List<Lot> lots;
 	@ManyToOne
 	@JoinColumn(name="association_name")
 	private Association association;
@@ -68,13 +68,15 @@ public class Offre {
 	public void setDateAchat(Date dateAchat) {
 		this.dateAchat = dateAchat;
 	}
-	
-	public Lot getLot() {
-		return lot;
+
+	public List<Lot> getLots() {
+		return lots;
 	}
-	public void setLot(Lot lot) {
-		this.lot = lot;
+
+	public void setLots(List<Lot> lots) {
+		this.lots = lots;
 	}
+
 	public Association getAssociation() {
 		return association;
 	}
