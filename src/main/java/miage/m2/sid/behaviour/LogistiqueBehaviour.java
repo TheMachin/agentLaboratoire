@@ -8,10 +8,7 @@ import miage.m2.sid.model.Lot;
 import miage.m2.sid.model.Vaccin;
 
 import javax.persistence.Query;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 public class LogistiqueBehaviour extends TickerBehaviour{
 
@@ -30,15 +27,52 @@ public class LogistiqueBehaviour extends TickerBehaviour{
         System.out.println("start");
         String r = "SELECT g FROM Generique g";
         Query q = em.createQuery(r);
-        List<Generique> generiques = q.getResultList();
 
-        for(Generique g : generiques){
-            addStock(g);
+        List<Generique> generiques = q.getResultList();
+        for(Generique laboGenerique : generiques){
+            generateStock(laboGenerique);
         }
 
     }
 
-    private void addStock(Generique generique){
+    private void generateStock(Generique generique){
+        Vaccin vaccin = getRandomVaccin();
+        if(vaccin != null){
+            int quantity = getRandomNumber(200,100);
+            Lot lot = new Lot();
+            lot.setLaboratoire(generique);
+            lot.setNom(vaccin.getNom());
+            lot.setVolume(quantity * vaccin.getVolume());
+            lot.setPrix(quantity * vaccin.getPrix());
+            lot.setNombre(quantity);
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(new Date());
+            cal.add(Calendar.MONTH, 1);
+            lot.setDateDLC(cal.getTime());
+
+            em.getTransaction().begin();
+            em.persist(lot);
+            em.getTransaction().commit();
+        }
+    }
+
+    private Vaccin getRandomVaccin(){
+        int min = 0;
+        int max = vaccins.size()-1;
+        if(max <= 0){
+            return null;
+        }else{
+            return vaccins.get(getRandomNumber(max,min));
+        }
+    }
+
+    private static int getRandomNumber(int max, int min){
+        Random random = new Random();
+        return random.nextInt(max - min + 1) + min;
+    }
+
+    /*private void addStock(Generique generique){
         int min = 0;
         int max = vaccins.size()-1;
         int nb = min + (int)(Math.random() * ((max - min) + 1));
@@ -47,7 +81,7 @@ public class LogistiqueBehaviour extends TickerBehaviour{
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         cal.add(Calendar.MONTH, 1); // Add 1 month to current date
-        Vaccin vaccin = null;
+        Vaccin vaccin = vaccins.get(nb);
         Lot lot = new Lot();
         lot.setNom(vaccin.getNom());
         lot.setDateDLC(cal.getTime());
@@ -68,7 +102,7 @@ public class LogistiqueBehaviour extends TickerBehaviour{
         em.getTransaction().begin();
         em.merge(generique);
         em.getTransaction().commit();
-    }
+    }*/
 
     private List<Vaccin> getAllVaccins(){
         String r = "Select v from Vaccin v";
