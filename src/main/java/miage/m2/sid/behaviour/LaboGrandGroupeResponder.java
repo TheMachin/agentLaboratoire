@@ -12,10 +12,7 @@ import jade.proto.ContractNetResponder;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
-import miage.m2.sid.model.Association;
-import miage.m2.sid.model.Lot;
-import miage.m2.sid.model.Offre;
-import miage.m2.sid.model.Vaccin;
+import miage.m2.sid.model.*;
 
 import javax.persistence.Query;
 import java.util.*;
@@ -71,9 +68,15 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
 
+        /**
+         * enregistrement des infos
+         */
         acceptPropose(cfp,propose,accept);
 
-        return super.handleAcceptProposal(cfp, propose, accept);
+        ACLMessage inform = accept.createReply();
+        inform.setPerformative(ACLMessage.INFORM);
+        return inform;
+
     }
 
     /*
@@ -121,23 +124,14 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         ACLMessage replyMessage = messageReceived.createReply();
         Gson gson = new Gson();
         CFP cfp = null;
-        Propose propose = null;
         try{
             cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
             return createProposition(messageReceived);
-        }catch(Exception e){
-            try{
-                propose = gson.fromJson(messageReceived.getContent(),Propose.class);
-                /**
-                 * pour dire qu'au bout de 3-5 fois on refuse
-                 */
-                return messageReceived;
-            }catch(Exception ex){
-                replyMessage = messageReceived.createReply();
-                replyMessage.setContent("cancel");
-                replyMessage.setPerformative(ACLMessage.FAILURE);
-                return replyMessage;
-            }
+        }catch(Exception ex){
+            replyMessage = messageReceived.createReply();
+            replyMessage.setContent("cancel");
+            replyMessage.setPerformative(ACLMessage.FAILURE);
+            return replyMessage;
         }
     }
 
@@ -164,7 +158,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
-        cal.add(Calendar.YEAR, 1); // Add 1 year to current date
+        cal.add(Calendar.MONTH, 1); // Add 1 month to current date
 
         // Create proposition
         Propose proposition = new Propose(cfp.getNb(), prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
@@ -184,9 +178,9 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Propose p = gson.fromJson(propose.getContent(),Propose.class);
 
         Lot lot = new Lot();
-        lot.setVolume(p.getVolume());
+        lot.setVolume(p.getVolume()*p.getNombre());
         lot.setNombre(p.getNombre());
-        lot.setPrix((double) p.getPrix());
+        lot.setPrix((double) (p.getPrix()*p.getNombre()));
         lot.setDateDLC(p.getDatePeremption());
         Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
         lot.setVaccin(vaccin);
@@ -199,7 +193,13 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Association association = new Association();
         association.setNom(cfp.getSender().getName());
         offre.setAssociation(association);
+        Laboratoire laboratoire = getLaboratoire();
+        laboratoire.setCa(laboratoire.getCa()+lot.getPrix());
+
         em.getTransaction().begin();
+        em.persist(lot);
+        em.merge(association);
+        em.merge(laboratoire);
         em.persist(offre);
         em.getTransaction().commit();
 
@@ -210,5 +210,13 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Query query = EntityManager.getInstance().createQuery(hql);
         query.setParameter("name",name);
         return (Vaccin)query.getSingleResult();
+    }
+
+    private Laboratoire getLaboratoire(){
+        String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
+        Query query = EntityManager.getInstance().createQuery(hql);
+        query.setParameter("name",this.myAgent.getName());
+        return (Laboratoire) query.getSingleResult();
+    }
     }
 }
