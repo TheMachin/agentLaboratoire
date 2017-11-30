@@ -25,6 +25,8 @@ public class DummyInitiator extends ContractNetInitiator {
             System.out.println("Response : " + response.toString());
             if (reponseMessage.getPerformative() == ACLMessage.PROPOSE) {
                 proposeResponse.add(reponseMessage);
+
+
                 sendResponse(reponseMessage);
 
             }
@@ -33,8 +35,28 @@ public class DummyInitiator extends ContractNetInitiator {
 
     private void sendResponse(ACLMessage response) {
         Gson gson = new Gson();
-        ACLMessage agree = response.createReply();
-        agree.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-        this.myAgent.send(agree);
+
+        if(response.getPerformative()==ACLMessage.PROPOSE){
+            Propose propose = gson.fromJson(response.getContent(),Propose.class);
+            //proba acceptation
+            int accepte = 0 + (int)(Math.random() * ((1 - 0) + 1));
+            if(accepte==1){
+                ACLMessage agree = response.createReply();
+                agree.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                this.myAgent.send(agree);
+            }else{
+                //probo négociation
+                int negocie = 0 + (int)(Math.random() * ((1 - 0) + 1));
+                if(negocie==1){
+                    
+                }else{
+                    ACLMessage reject = response.createReply();
+                    reject.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                    this.myAgent.send(reject);
+                }
+            }
+        }
+
+
     }
 }

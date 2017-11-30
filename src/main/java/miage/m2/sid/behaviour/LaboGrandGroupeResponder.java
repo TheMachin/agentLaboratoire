@@ -12,14 +12,17 @@ import jade.proto.ContractNetResponder;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
+import miage.m2.sid.model.Association;
+import miage.m2.sid.model.Lot;
+import miage.m2.sid.model.Offre;
 import miage.m2.sid.model.Vaccin;
 
 import javax.persistence.Query;
-import java.util.Calendar;
-import java.util.Date;
+import java.util.*;
 
 public class LaboGrandGroupeResponder extends ContractNetResponder {
 
+    private javax.persistence.EntityManager em = EntityManager.getInstance();
     // Take care that if mt is null every message is consumed by this protocol.
     public LaboGrandGroupeResponder(Agent a, MessageTemplate mt) {
         super(a, mt);
@@ -45,7 +48,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
 
-        return createProposition(cfp);
+        return getACLMessageFromProposition(cfp);
     }
 
     /*
@@ -67,6 +70,8 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
+
+        acceptPropose(cfp,propose,accept);
 
         return super.handleAcceptProposal(cfp, propose, accept);
     }
@@ -110,6 +115,32 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         super.sessionTerminated();
     }
 
+
+    private ACLMessage getACLMessageFromProposition(ACLMessage messageReceived){
+
+        ACLMessage replyMessage = messageReceived.createReply();
+        Gson gson = new Gson();
+        CFP cfp = null;
+        Propose propose = null;
+        try{
+            cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
+            return createProposition(messageReceived);
+        }catch(Exception e){
+            try{
+                propose = gson.fromJson(messageReceived.getContent(),Propose.class);
+                /**
+                 * pour dire qu'au bout de 3-5 fois on refuse
+                 */
+                return messageReceived;
+            }catch(Exception ex){
+                replyMessage = messageReceived.createReply();
+                replyMessage.setContent("cancel");
+                replyMessage.setPerformative(ACLMessage.FAILURE);
+                return replyMessage;
+            }
+        }
+    }
+
     private ACLMessage createProposition(ACLMessage messageReceived){
         Gson gson = new Gson();
         CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
@@ -118,6 +149,18 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Vaccin vaccin = getVaccinByName(cfp.getMaladie());
         int prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
         int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
+
+        /**
+         * Pas de vaccin pour la maladie
+         */
+        if(vaccin==null){
+            // Create reply
+            ACLMessage replyMessage = messageReceived.createReply();
+            replyMessage.setContent("");
+            replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
+
+            return replyMessage;
+        }
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
@@ -135,8 +178,35 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         return replyMessage;
     }
 
+    private void acceptPropose(ACLMessage cfp, ACLMessage propose, ACLMessage accept){
+        Gson gson = new Gson();
+        CFP cfpM = gson.fromJson(cfp.getContent(),CFP.class);
+        Propose p = gson.fromJson(propose.getContent(),Propose.class);
+
+        Lot lot = new Lot();
+        lot.setVolume(p.getVolume());
+        lot.setNombre(p.getNombre());
+        lot.setPrix((double) p.getPrix());
+        lot.setDateDLC(p.getDatePeremption());
+        Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
+        lot.setVaccin(vaccin);
+        Offre offre = new Offre();
+        offre.setAccepte(true);
+        offre.setDateDebutOffre(null);
+        offre.setDateAchat(new Date());
+        offre.setDateLimite(p.getDateLivraison());
+        offre.setLot(lot);
+        Association association = new Association();
+        association.setNom(cfp.getSender().getName());
+        offre.setAssociation(association);
+        em.getTransaction().begin();
+        em.persist(offre);
+        em.getTransaction().commit();
+
+    }
+
     private Vaccin getVaccinByName(String name){
-        String hql = "FROM Vaccin V WHERE V.nom = :name";
+        String hql = "SELECT V FROM Vaccin V WHERE V.nom = :name";
         Query query = EntityManager.getInstance().createQuery(hql);
         query.setParameter("name",name);
         return (Vaccin)query.getSingleResult();
