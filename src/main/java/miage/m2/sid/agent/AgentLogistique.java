@@ -16,6 +16,5 @@ public class AgentLogistique extends Agent {
 
         System.out.println(this.getName()+" "+this.getAID()+" started");
         addBehaviour(behaviour);
-
     }
 }

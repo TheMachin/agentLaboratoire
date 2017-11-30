@@ -1,16 +1,14 @@
 package miage.m2.sid.agent;
 
-
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
-import miage.m2.sid.behaviour.BehaviourLaboratoireGrandGroupe;
 import miage.m2.sid.behaviour.LaboGrandGroupeResponder;
+import miage.m2.sid.container.LaboratoireGrandGroupeContainer;
 import miage.m2.sid.model.Laboratoire;
-import miage.m2.sid.model.container.LaboratoireGrandGroupeContainer;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
 public class AgentLaboratoireGrandGroupe extends Agent{
@@ -33,7 +31,6 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		System.out.println(laboratoire.getNom());
 		System.out.println(this.getName()+" "+this.getAID()+" started");
 		
-		//this.behaviour = new BehaviourLaboratoireGrandGroupe(this, gui, laboratoire);
 		this.behaviour = new LaboGrandGroupeResponder(this, null);
 		registerService();
 		addBehaviour(behaviour);
@@ -44,7 +41,7 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		dfd.setName(this.getAID());
 
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("Labo");
+		sd.setType("labo");
 		sd.setName("LaboGrandGroupe");
 
 		dfd.addServices(sd);
@@ -57,9 +54,11 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		}
 
 	}
-	
+
+	/*
+		Traitement de fin
+	 */
 	protected void takeDown(){
-		//traitement de fin
 		if(behaviour!=null){
 			try {
 				//deregister from yellow page

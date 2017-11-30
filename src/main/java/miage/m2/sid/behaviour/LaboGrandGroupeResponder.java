@@ -45,7 +45,12 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
 
-        return getACLMessageFromProposition(cfp);
+        try{
+            return createProposition(cfp);
+        }catch(Exception ex){
+            ex.printStackTrace();
+            return createFailure(cfp);
+        }
     }
 
     /*
@@ -70,13 +75,12 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
 
         /**
          * enregistrement des infos
-         */
-        acceptPropose(cfp,propose,accept);
+
+        acceptPropose(cfp,propose,accept);*/
 
         ACLMessage inform = accept.createReply();
         inform.setPerformative(ACLMessage.INFORM);
         return inform;
-
     }
 
     /*
@@ -118,42 +122,14 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         super.sessionTerminated();
     }
 
-
-    private ACLMessage getACLMessageFromProposition(ACLMessage messageReceived){
-
-        ACLMessage replyMessage = messageReceived.createReply();
-        Gson gson = new Gson();
-        CFP cfp = null;
-        try{
-            cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
-            return createProposition(messageReceived);
-        }catch(Exception ex){
-            replyMessage = messageReceived.createReply();
-            replyMessage.setContent("cancel");
-            replyMessage.setPerformative(ACLMessage.FAILURE);
-            return replyMessage;
-        }
-    }
-
-    private ACLMessage createProposition(ACLMessage messageReceived){
+    private ACLMessage createProposition(ACLMessage messageReceived) throws Exception{
         Gson gson = new Gson();
         CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
 
-        // TODO: 29/11/2017 select prix du vaccin from db
         Vaccin vaccin = getVaccinByName(cfp.getMaladie());
-        int prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
-        int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
 
-        /**
-         * Pas de vaccin pour la maladie
-         */
         if(vaccin==null){
-            // Create reply
-            ACLMessage replyMessage = messageReceived.createReply();
-            replyMessage.setContent("");
-            replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
-
-            return replyMessage;
+            throw new Exception("Vaccin : "+cfp.getMaladie()+" doesn't exist");
         }
 
         Calendar cal = Calendar.getInstance();
@@ -161,6 +137,8 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         cal.add(Calendar.MONTH, 1); // Add 1 month to current date
 
         // Create proposition
+        int prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
+        int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
         Propose proposition = new Propose(cfp.getNb(), prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
         System.out.println(proposition);
 
@@ -172,7 +150,14 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         return replyMessage;
     }
 
-    private void acceptPropose(ACLMessage cfp, ACLMessage propose, ACLMessage accept){
+    private ACLMessage createFailure(ACLMessage messageReceived){
+        ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setContent("cancel");
+        replyMessage.setPerformative(ACLMessage.FAILURE);
+        return replyMessage;
+    }
+
+    /*private void acceptPropose(ACLMessage cfp, ACLMessage propose, ACLMessage accept){
         Gson gson = new Gson();
         CFP cfpM = gson.fromJson(cfp.getContent(),CFP.class);
         Propose p = gson.fromJson(propose.getContent(),Propose.class);
@@ -206,19 +191,21 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         em.persist(offre);
         em.getTransaction().commit();
 
-    }
+    }*/
 
+    /*
+        Get vaccin by his name
+        @name of vaccin
+        @return a vaccin or null if not found
+     */
     private Vaccin getVaccinByName(String name){
         String hql = "SELECT V FROM Vaccin V WHERE V.nom = :name";
         Query query = EntityManager.getInstance().createQuery(hql);
         query.setParameter("name",name);
-        return (Vaccin)query.getSingleResult();
-    }
-
-    private Laboratoire getLaboratoire(){
-        String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
-        Query query = EntityManager.getInstance().createQuery(hql);
-        query.setParameter("name",this.myAgent.getName());
-        return (Laboratoire) query.getSingleResult();
+        if(query.getSingleResult() == null){
+            return null;
+        }else{
+            return (Vaccin)query.getSingleResult();
+        }
     }
 }

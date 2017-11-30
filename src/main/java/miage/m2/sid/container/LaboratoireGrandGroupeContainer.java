@@ -1,4 +1,4 @@
-package miage.m2.sid.model.container;
+package miage.m2.sid.container;
 
 import jade.core.Profile;
 import jade.core.ProfileImpl;
@@ -33,12 +33,6 @@ public class LaboratoireGrandGroupeContainer extends Application {
     }
 
     public void startContainer() {
-        laboratoire = null;
-        /*javax.persistence.EntityManager em = EntityManager.getInstance();
-		String r = "Select l fron GrandGroupe l where l.nom=:nom";
-		Query q = em.createQuery(r);
-		q.setParameter("nom", "Un grand labo");
-		laboratoire = (GrandGroupe) q.getSingleResult();*/
         laboratoire = new Laboratoire();
         laboratoire.setCa(0);
         laboratoire.setNom("Un grand labo");
@@ -61,6 +55,7 @@ public class LaboratoireGrandGroupeContainer extends Application {
             agentLogistique.start();
         } catch (ControllerException e) {
             //Logger.log(Level.FATAL,e.toString(),e);
+            e.printStackTrace();
         }
     }
 
