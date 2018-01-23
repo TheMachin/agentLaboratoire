@@ -72,38 +72,6 @@ public class LogistiqueBehaviour extends TickerBehaviour{
         return random.nextInt(max - min + 1) + min;
     }
 
-    /*private void addStock(Generique generique){
-        int min = 0;
-        int max = vaccins.size()-1;
-        int nb = min + (int)(Math.random() * ((max - min) + 1));
-        int nb2=0;
-        int nbVaccin = 0;
-        Calendar cal = Calendar.getInstance();
-        cal.setTime(new Date());
-        cal.add(Calendar.MONTH, 1); // Add 1 month to current date
-        Vaccin vaccin = vaccins.get(nb);
-        Lot lot = new Lot();
-        lot.setNom(vaccin.getNom());
-        lot.setDateDLC(cal.getTime());
-        for(int i=0;i<nb;i++){
-            nb2 = min + (int)(Math.random() * ((max - min) + 1));
-            //on prend un vaccin de maniere aleatoire
-            vaccin = vaccins.get(nb2);
-            //on ajoute entre 100 et 200 vaccin
-            nbVaccin = 100 + (int)(Math.random() * ((200 - 100) + 1));
-            for(int x = 0 ; x<nbVaccin;x++){
-                lot.addVaccin(vaccin);
-            }
-            //on ajoute un nombre aléatoire de lot
-            for(int j=0;j<nb2;j++){
-                generique.addLot(lot);
-            }
-        }
-        em.getTransaction().begin();
-        em.merge(generique);
-        em.getTransaction().commit();
-    }*/
-
     private List<Vaccin> getAllVaccins(){
         String r = "Select v from Vaccin v";
         Query q = em.createQuery(r);

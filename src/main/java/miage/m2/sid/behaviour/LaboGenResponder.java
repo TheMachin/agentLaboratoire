@@ -118,11 +118,9 @@ public class LaboGenResponder extends ContractNetResponder {
         Gson gson = new Gson();
         CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
 
-        // TODO: 29/11/2017 select prix du vaccin from db
         Vaccin vaccin = getVaccinByName(cfp.getMaladie());
-        int prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
-        int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
-
+        int prixTotal = 0;
+        int volumeTotal = 0;
         /**
          * Pas de vaccin pour la maladie
          */
@@ -133,8 +131,10 @@ public class LaboGenResponder extends ContractNetResponder {
             replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
 
             return replyMessage;
+        }else{
+            prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
+            volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
         }
-
         /*
         On vérifie si ya assez de vaccin
          */
