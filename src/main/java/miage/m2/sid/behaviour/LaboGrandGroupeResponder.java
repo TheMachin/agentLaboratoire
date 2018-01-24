@@ -137,7 +137,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         cal.add(Calendar.MONTH, 1); // Add 1 month to current date
 
         // Create proposition
-        int prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
+        double prixTotal = cfp.getNb() * vaccin.getPrix();
         int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
         Propose proposition = new Propose(cfp.getNb(), prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
         System.out.println(proposition);

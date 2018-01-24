@@ -6,7 +6,7 @@ import java.util.Date;
 public class Propose implements Serializable {
 
     private Integer nombre;
-    private Integer prix;
+    private Double prix;
     private Date dateLivraison;
     private Date datePeremption;
     private double volume;
@@ -14,7 +14,7 @@ public class Propose implements Serializable {
     public Propose() {
     }
 
-    public Propose(Integer nombre, Integer prix, Date dateLivraison, Date datePeremption, int volume) {
+    public Propose(Integer nombre, Double prix, Date dateLivraison, Date datePeremption, int volume) {
         this.nombre = nombre;
         this.prix = prix;
         this.dateLivraison = dateLivraison;
@@ -30,11 +30,11 @@ public class Propose implements Serializable {
         this.nombre = nombre;
     }
 
-    public Integer getPrix() {
+    public Double getPrix() {
         return prix;
     }
 
-    public void setPrix(Integer prix) {
+    public void setPrix(Double prix) {
         this.prix = prix;
     }
 

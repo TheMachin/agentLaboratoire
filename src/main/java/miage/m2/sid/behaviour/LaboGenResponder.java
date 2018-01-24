@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class LaboGenResponder extends ContractNetResponder {
 
@@ -119,7 +120,7 @@ public class LaboGenResponder extends ContractNetResponder {
         CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
 
         Vaccin vaccin = getVaccinByName(cfp.getMaladie());
-        int prixTotal = 0;
+        double prixTotal = 0;
         int volumeTotal = 0;
         /**
          * Pas de vaccin pour la maladie
@@ -132,13 +133,13 @@ public class LaboGenResponder extends ContractNetResponder {
 
             return replyMessage;
         }else{
-            prixTotal = (int)(cfp.getNb() * vaccin.getPrix());
+            prixTotal = cfp.getNb() * vaccin.getPrix();
             volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
         }
         /*
         On vérifie si ya assez de vaccin
          */
-        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfp.getNb(),getLaboratoire());
+        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfp.getNb(),getLaboratoire(), cfp.getDate());
 
         //Si on a a pas assez de vaccins
         if(lots==null){
@@ -172,7 +173,7 @@ public class LaboGenResponder extends ContractNetResponder {
 
         //on vérifie si on a tjr du stock
         Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
-        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfpM.getNb(),getLaboratoire());
+        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfpM.getNb(),getLaboratoire(), p.getDateLivraison());
 
         //Si on a a pas assez de vaccins
         //On informe l'association
@@ -231,13 +232,26 @@ public class LaboGenResponder extends ContractNetResponder {
         return (Laboratoire) query.getSingleResult();
     }
 
-    private List<Lot> getALlLotsWithEnoughVaccin(Vaccin vaccin,int nombre, Laboratoire labo){
+    /**
+     * recupere un stock de lot de vaccin d'un labo donné dont la date DLC est > à la date de livraison
+     * @param vaccin
+     * @param labo
+     * @param dateLivraison
+     * @return
+     */
+    private List<Lot> getStock(Vaccin vaccin, Laboratoire labo, Date dateLivraison){
         //on recupere tous les lots du vaccin concerné
-        String r = "SELECT lo FROM Lot lo JOIN Laboratoire l WHERE l.lots=lo.nom AND lo.nom=:name AND l.nom=:labo";
+        String r = "SELECT lo FROM Lot lo JOIN Laboratoire l WHERE DATEDIFF(dateDLC,:dateLivraison)>0 AND l.lots=lo.nom AND lo.nom=:name AND l.nom=:labo";
         Query q = em.createQuery(r);
         q.setParameter("name",vaccin.getNom());
         q.setParameter("labo",labo.getNom());
-        List<Lot> stocks = q.getResultList();
+        q.setParameter("dateLivraison", dateLivraison);
+        return q.getResultList();
+    }
+
+    private List<Lot> getALlLotsWithEnoughVaccin(Vaccin vaccin,int nombre, Laboratoire labo, Date dateLivraison){
+        //on recupere tous les lots du vaccin concerné
+        List<Lot> stocks = getStock(vaccin, labo, dateLivraison);
         List<Lot> lots = new ArrayList<Lot>();
         //on vérifie si on a assez de vaccin
         for(Lot lot : stocks){
@@ -251,6 +265,75 @@ public class LaboGenResponder extends ContractNetResponder {
             return lots;
         }
         return null;
+    }
+
+    /**
+     * on propose un prix en fonction de deux stratégies (DLC ou stock)
+     * @param lot
+     * @param dateLivraison
+     * @return le prix la plus faible
+     */
+    private double getPriceByStrategies(Lot lot, Date dateLivraison, Laboratoire labo){
+
+        double priceByDLCStrategy = getPriceByDLCStrategy(lot, dateLivraison);
+        double priceByStockStrategy = getPriceByStockStrategy(lot, dateLivraison, labo);
+
+        if(priceByDLCStrategy>priceByStockStrategy){
+            return priceByStockStrategy;
+        }else{
+            return priceByDLCStrategy;
+        }
+    }
+
+    /**
+     * Reduit prix du lot si dlc inférieur à 1 semaine avant la date de livraison
+     * @param lot
+     * @param dateLivraison
+     * @return price
+     */
+    private double getPriceByDLCStrategy(Lot lot, Date dateLivraison){
+        long date = dateLivraison.getTime()-lot.getDateDLC().getTime();
+        //System.out.println(simpleDateFormat.format(labo.getLots().get(0).getDateDLC()));
+        long jourDiff = TimeUnit.DAYS.convert(date, TimeUnit.MILLISECONDS);
+        System.out.println("Jours diff "+ jourDiff);
+        if(jourDiff < 7){
+            return lot.getPrix() - (lot.getPrix()*0.3);
+        }else{
+            return lot.getPrix();
+        }
+    }
+
+    /**
+     * Obtenir un prix selon la stratégie du stock
+     * Si on a trop de stock, on diminue le prix
+     * @param lot
+     * @param dateLivraison
+     * @param labo
+     * @return
+     */
+    private double getPriceByStockStrategy(Lot lot, Date dateLivraison, Laboratoire labo){
+        Vaccin v = new Vaccin();
+        v.setNom(lot.getNom());
+        List<Lot> stocks = getStock(v, labo, dateLivraison);
+        double rabais = 0;
+        int nbVaccin = 0;
+        //on récupere le nombre total de vaccin
+        for(Lot l : stocks){
+            nbVaccin+=l.getNombre();
+        }
+        //si on a trop de stock, on diminue le prix
+        if(stocks.size()>800){
+            rabais = 0.3 * lot.getPrix();
+        }else if(stocks.size()>500){
+            rabais = 0.2 * lot.getPrix();
+        }else if(stocks.size()>300){
+            rabais = 0.15 * lot.getPrix();
+        }else if(stocks.size()>200){
+            rabais = 0.1 * lot.getPrix();
+        }else if(stocks.size()>100){
+            rabais = 0.05 * lot.getPrix();
+        }
+        return lot.getPrix() - rabais;
     }
 
 }
