@@ -23,20 +23,18 @@ public class DummyInitiator extends ContractNetInitiator {
         for (Object response : responses) {
             ACLMessage reponseMessage = (ACLMessage) response;
             System.out.println("Response : " + response.toString());
+
             if (reponseMessage.getPerformative() == ACLMessage.PROPOSE) {
                 proposeResponse.add(reponseMessage);
-
-
                 sendResponse(reponseMessage);
-
             }
         }
     }
 
-    public void reset(ACLMessage message){
-        this.reset(message);
-    }
-
+    /**
+     * Send response and accept proposal with proba 1/2
+     * @param response
+     */
     private void sendResponse(ACLMessage response) {
         Gson gson = new Gson();
 
@@ -56,9 +54,19 @@ public class DummyInitiator extends ContractNetInitiator {
                 this.myAgent.send(reject);
             }
         }
+    }
 
-        //this.reset();
+    /**
+     * Reset cette behaviour
+     */
+    private void resetBehaviour() {
+        System.out.println(myAgent.getLocalName() + " -------- Labo behaviour is reset");
+        CommunicationBehaviour parent = (CommunicationBehaviour) this.parent;
+        parent.init();
+        this.reset(parent.startLabo());
+    }
 
-
+    public void reset(ACLMessage message){
+        this.reset(message);
     }
 }

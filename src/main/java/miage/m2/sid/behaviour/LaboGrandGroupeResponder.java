@@ -6,13 +6,17 @@ import jade.core.behaviours.DataStore;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
+import miage.m2.sid.event.ProposeEvent;
 import miage.m2.sid.model.*;
+import miage.m2.sid.query.Requetes;
+import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -22,11 +26,13 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
 
     private javax.persistence.EntityManager em = EntityManager.getInstance();
     private Laboratoire labo;
+    private InterfaceAgentLaboratoire gui;
 
 
     // Take care that if mt is null every message is consumed by this protocol.
-    public LaboGrandGroupeResponder(Agent a, MessageTemplate mt) {
+    public LaboGrandGroupeResponder(Agent a, MessageTemplate mt, InterfaceAgentLaboratoire gui) {
         super(a, mt);
+        setInterface(gui);
     }
 
     public LaboGrandGroupeResponder(Agent a, MessageTemplate mt, DataStore store) {
@@ -86,6 +92,8 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         acceptPropose(cfp,propose,accept);
 
         ACLMessage inform = accept.createReply();
+        inform.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        inform.setOntology("Laboratoire");
         inform.setPerformative(ACLMessage.INFORM);
         return inform;
     }
@@ -108,6 +116,24 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         System.out.println("Content : "+cfp.getContent());
 
         super.handleRejectProposal(cfp, propose, reject);
+
+        Gson gson = new Gson();
+        CFP cfpM = gson.fromJson(cfp.getContent(), CFP.class);
+        Propose p = gson.fromJson(propose.getContent(),Propose.class);
+
+        /**
+         * affichage proposition sur l'interface graphique
+         */
+        ProposeEvent proposeEvent = new ProposeEvent(
+                getNameOfAgentWithoutAddress(cfp.getSender().getName()),
+                cfpM.getMaladie(),
+                p.getNombre(),
+                p.getDatePeremption(),
+                cfpM.getDate(),
+                p.getPrix(),
+                "Refusé par l'association");
+        gui.addRow(proposeEvent);
+
     }
 
     /*
@@ -133,9 +159,11 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Gson gson = new Gson();
         CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
 
-        Vaccin vaccin = getVaccinByName(cfp.getMaladie());
+        Vaccin vaccin = Requetes.getVaccinByName(cfp.getMaladie());
 
         if(vaccin==null){
+            ProposeEvent proposeEvent = new ProposeEvent(getNameOfAgentWithoutAddress(messageReceived.getSender().getName()),cfp.getMaladie(),cfp.getNb(),new Date(),cfp.getDate(), 0.0,"Pas de vaccin");
+            gui.addRow(proposeEvent);
             throw new Exception("Vaccin : "+cfp.getMaladie()+" doesn't exist");
         }
 
@@ -151,14 +179,30 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
 
         // Create reply
         ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        replyMessage.setOntology("Laboratoire");
         replyMessage.setContent(gson.toJson(proposition));
         replyMessage.setPerformative(ACLMessage.PROPOSE);
+        /**
+         * affichage proposition sur l'interface graphique
+         */
+        ProposeEvent proposeEvent = new ProposeEvent(
+                getNameOfAgentWithoutAddress(messageReceived.getSender().getName()),
+                cfp.getMaladie(),
+                proposition.getNombre(),
+                proposition.getDatePeremption(),
+                cfp.getDate(),
+                proposition.getPrix(),
+                "Envoie de proposition");
+        gui.addRow(proposeEvent);
 
         return replyMessage;
     }
 
     private ACLMessage createFailure(ACLMessage messageReceived){
         ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        replyMessage.setOntology("Laboratoire");
         replyMessage.setContent("cancel");
         replyMessage.setPerformative(ACLMessage.FAILURE);
         return replyMessage;
@@ -170,7 +214,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Propose p = gson.fromJson(propose.getContent(),Propose.class);
 
 
-        Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
+        Vaccin vaccin = Requetes.getVaccinByName(cfpM.getMaladie());
         double volume = vaccin.getVolume() * cfpM.getNb();
         double prix = vaccin.getPrix() * cfpM.getNb();
 
@@ -184,7 +228,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         Association association = new Association();
         association.setNom(getNameOfAgentWithoutAddress(cfp.getSender().getName()));
         vente.setAssociation(association);
-        Laboratoire laboratoire = getLaboratoire();
+        Laboratoire laboratoire = getLaboratoire(this.myAgent);
         laboratoire.setCa(laboratoire.getCa()+prix);
 
         em.getTransaction().begin();
@@ -193,28 +237,19 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         em.persist(vente);
         em.getTransaction().commit();
 
-    }
-
-    /*
-        Get vaccin by his name
-        @name of vaccin
-        @return a vaccin or null if not found
-     */
-    private Vaccin getVaccinByName(String name){
-        String hql = "SELECT V FROM Vaccin V WHERE V.nom = :name";
-        Query query = EntityManager.getInstance().createQuery(hql);
-        query.setParameter("name",name);
-        Vaccin vaccin = null;
-        try{
-            vaccin = (Vaccin) query.getSingleResult();
-        }catch (NoResultException no) {
-
-        }
-        if(vaccin!=null){
-            return vaccin;
-        }else{
-            return null;
-        }
+        /**
+         * affichage proposition sur l'interface graphique
+         */
+        ProposeEvent proposeEvent = new ProposeEvent(
+                association.getNom(),
+                cfpM.getMaladie(),
+                p.getNombre(),
+                p.getDatePeremption(),
+                cfpM.getDate(),
+                p.getPrix(),
+                "Accepté par l'association");
+        gui.addRow(proposeEvent);
+        gui.setCA(laboratoire.getCa());
     }
 
     /**
@@ -227,25 +262,16 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         return parts[0];
     }
 
-    private Laboratoire getLaboratoire(){
+    private Laboratoire getLaboratoire(Agent a){
         if(this.labo==null) {
-            String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
-            Query query = EntityManager.getInstance().createQuery(hql);
-            //Obtenir le nom du laboratoire sans son adresse
-            query.setParameter("name", getNameOfAgentWithoutAddress(this.myAgent.getName()));
             Laboratoire la = null;
-
-            try{
-                la = (Laboratoire) query.getSingleResult();
-            }catch (NoResultException no){
-
-            }
+            la = Requetes.getLaboratoireByName(getNameOfAgentWithoutAddress(a.getName()));
             if(la!=null) {
                 this.labo = la;
                 return this.labo;
             }else{
                 labo = new Laboratoire();
-                labo.setNom(getNameOfAgentWithoutAddress(this.myAgent.getName()));
+                labo.setNom(getNameOfAgentWithoutAddress(a.getName()));
                 labo.setCa(0);
                 em.getTransaction().begin();
                 em.persist(labo);
@@ -255,5 +281,9 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         }else{
             return this.labo;
         }
+    }
+
+    public void setInterface(InterfaceAgentLaboratoire gui){
+        this.gui=gui;
     }
 }

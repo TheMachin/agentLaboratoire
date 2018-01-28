@@ -33,7 +33,7 @@ public class DummyAssocContainer extends Application{
             properties.setProperty(Profile.GUI, "true");
 
             ProfileImpl profileImpl = new ProfileImpl(properties);
-            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "192.168.110.1");
+            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
             profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "association");
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
             AgentController agentLabo = agentContainer
@@ -46,9 +46,7 @@ public class DummyAssocContainer extends Application{
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        // TODO Auto-generated method stub
-
-        primaryStage.setTitle("Gui Agent laboratoire grand groupe");
+        primaryStage.setTitle("Gui dummy asso");
         Parent root = null;
 
         loader = new FXMLLoader(getClass().getResource("/DummyAssocUI.fxml"));
@@ -62,7 +60,6 @@ public class DummyAssocContainer extends Application{
 
             startContainer();
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

@@ -8,7 +8,6 @@ import jade.wrapper.AgentContainer;
 import jade.wrapper.AgentController;
 import jade.wrapper.ControllerException;
 import miage.m2.sid.EntityManager;
-import miage.m2.sid.agent.AgentLaboratoireGenerique;
 import miage.m2.sid.agent.AgentLogistique;
 
 public class LogistiqueContainer {

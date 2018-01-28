@@ -31,7 +31,7 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		System.out.println(laboratoire.getNom());
 		System.out.println(this.getName()+" "+this.getAID()+" started");
 		
-		this.behaviour = new LaboGrandGroupeResponder(this, null);
+		this.behaviour = new LaboGrandGroupeResponder(this, null, gui);
 		registerService();
 		addBehaviour(behaviour);
 	}
@@ -41,7 +41,7 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		dfd.setName(this.getAID());
 
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("Labo");
+		sd.setType("labo");
 		sd.setName("LaboGrandGroupe");
 
 		dfd.addServices(sd);

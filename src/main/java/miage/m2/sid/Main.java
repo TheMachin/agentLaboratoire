@@ -18,6 +18,7 @@ public class Main {
 		//EntityManager.close();
         //getAllSickFormSheet("/sheet/maladie.xlsx");
         //jeuEssaisGenerique();
+        //jeuEssaisLaboratoire();
 		try {
 			Runtime runtime = Runtime.instance();
 			jade.util.leap.Properties properties = new ExtendedProperties();
@@ -37,7 +38,7 @@ public class Main {
     }
 	
 	
-	private static  void jeuEssaisGenerique(){
+	private static  void jeuEssaisLaboratoire(){
 
         javax.persistence.EntityManager em = EntityManager.getInstance();
 
@@ -45,26 +46,21 @@ public class Main {
 		l1.setNom("Le générique de l'ouest");
 		l1.setCa(0);
 		l1.setLots(null);
-		l1.setLots(null);
         Laboratoire l2 = new Laboratoire();
         l2.setNom("La contrefaçon chinoise");
         l2.setCa(0);
-        l2.setLots(null);
         l2.setLots(null);
         Laboratoire l3 = new Laboratoire();
         l3.setNom("GeneriqueLabo");
         l3.setCa(0);
         l3.setLots(null);
-        l3.setLots(null);
         Laboratoire l4 = new Laboratoire();
         l4.setNom("El famoso labo");
         l4.setCa(0);
         l4.setLots(null);
-        l4.setLots(null);
         Laboratoire l5 = new Laboratoire();
         l5.setNom("Le petit labo");
         l5.setCa(0);
-        l5.setLots(null);
         l5.setLots(null);
 		em.getTransaction().begin();
 		em.persist(l1);
@@ -74,6 +70,39 @@ public class Main {
         em.persist(l5);
         em.getTransaction().commit();
 	}
+
+    private static  void jeuEssaisGenerique(){
+
+        javax.persistence.EntityManager em = EntityManager.getInstance();
+
+        Generique l1 = new Generique();
+        l1.setNom("Le générique de l'ouest");
+        l1.setCa(0);
+        l1.setMaxRabais(30);
+        Generique l2 = new Generique();
+        l2.setNom("La contrefaçon chinoise");
+        l2.setCa(0);
+        l2.setMaxRabais(30);
+        Generique l3 = new Generique();
+        l3.setNom("GeneriqueLabo");
+        l3.setCa(0);
+        l3.setMaxRabais(30);
+        Generique l4 = new Generique();
+        l4.setNom("El famoso labo");
+        l4.setCa(0);
+        l4.setMaxRabais(30);
+        Generique l5 = new Generique();
+        l5.setNom("Le petit labo");
+        l5.setCa(0);
+        l5.setMaxRabais(30);
+        em.getTransaction().begin();
+        em.persist(l1);
+        em.persist(l2);
+        em.persist(l3);
+        em.persist(l4);
+        em.persist(l5);
+        em.getTransaction().commit();
+    }
 
 	private static void getAllSickFormSheet(String fileName){
         PoiVaccin poiVaccin = new PoiVaccin(fileName);

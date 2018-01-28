@@ -14,11 +14,15 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.agent.AgentLaboratoireGrandGroupe;
-import miage.m2.sid.agent.AgentLogistique;
+import miage.m2.sid.event.ProposeEvent;
 import miage.m2.sid.model.Laboratoire;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
+import java.util.Date;
 
 public class LaboratoireGrandGroupeContainer extends Application {
 
@@ -44,12 +48,15 @@ public class LaboratoireGrandGroupeContainer extends Application {
             properties.setProperty(Profile.GUI, "true");
 
             ProfileImpl profileImpl = new ProfileImpl(properties);
-            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "192.168.110.1");
+            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
             profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "Laboratoire");
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
+
             //agent grand groupe
-            AgentController agentLabo = agentContainer
-                    .createNewAgent("Agent " + laboratoire.getNom(), AgentLaboratoireGrandGroupe.class.getName(), new Object[]{this, laboratoire});
+            AgentController agentLabo = agentContainer.createNewAgent(
+                    "Agent " + laboratoire.getNom(),
+                    AgentLaboratoireGrandGroupe.class.getName(),
+                    new Object[]{this, laboratoire});
 
 
             agentLabo.start();
@@ -81,11 +88,17 @@ public class LaboratoireGrandGroupeContainer extends Application {
 
         this.primaryStage.setScene(scene);
         this.primaryStage.show();
-
+        gui.init();
         startContainer();
         gui.setLaboratoireName(laboratoire.getNom());
         gui.setCA(laboratoire.getCa());
+        //ProposeEvent proposeEvent = new ProposeEvent("asso","boulot",4,new Date(),new Date(), 14.0,"En cours");
+        //gui.addRow(proposeEvent);
+    }
 
+    @Override
+    public void stop() throws Exception {
+        super.stop();
     }
 
     public void setAgentGrandGroupe(AgentLaboratoireGrandGroupe agent) {

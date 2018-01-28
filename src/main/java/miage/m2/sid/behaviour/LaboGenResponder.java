@@ -6,16 +6,19 @@ import jade.core.behaviours.DataStore;
 import jade.domain.FIPAAgentManagement.FailureException;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
 import miage.m2.sid.EntityManager;
 import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
+import miage.m2.sid.event.ProposeEvent;
 import miage.m2.sid.model.*;
+import miage.m2.sid.query.Requetes;
+import miage.m2.sid.ui.InterfaceAgentLaboratoire;
+import org.greenrobot.eventbus.EventBus;
 
-import javax.persistence.NoResultException;
-import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -26,10 +29,12 @@ public class LaboGenResponder extends ContractNetResponder {
 
     private javax.persistence.EntityManager em = EntityManager.getInstance();
     private Laboratoire labo = null;
+    private InterfaceAgentLaboratoire gui;
 
     // Take care that if mt is null every message is consumed by this protocol.
-    public LaboGenResponder(Agent a, MessageTemplate mt) {
+    public LaboGenResponder(Agent a, MessageTemplate mt, InterfaceAgentLaboratoire gui) {
         super(a, mt);
+        this.gui=gui;
     }
 
     public LaboGenResponder(Agent a, MessageTemplate mt, DataStore store) {
@@ -47,11 +52,12 @@ public class LaboGenResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
-        System.out.println("Laboratoire generique "+getLaboratoire()+" ---------------- handleCfp");
+        System.out.println("Laboratoire generique "+ getLaboratoire(this.myAgent)+" ---------------- handleCfp");
         System.out.println("Called : handleCfp");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
+
         return createProposition(cfp);
     }
 
@@ -70,7 +76,7 @@ public class LaboGenResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-        System.out.println("Laboratoire generique "+getLaboratoire()+" ---------------- AcceptProposal");
+        System.out.println("Laboratoire generique "+ getLaboratoire(this.myAgent)+" ---------------- AcceptProposal");
         System.out.println("Called : handleAcceptProposal");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
@@ -97,6 +103,22 @@ public class LaboGenResponder extends ContractNetResponder {
         System.out.println("Content : "+cfp.getContent());
 
         super.handleRejectProposal(cfp, propose, reject);
+        Gson gson = new Gson();
+        CFP cfpM = gson.fromJson(cfp.getContent(), CFP.class);
+        Propose p = gson.fromJson(propose.getContent(),Propose.class);
+
+        /**
+         * affichage proposition sur l'interface graphique
+         */
+        ProposeEvent proposeEvent = new ProposeEvent(
+                getNameOfAgentWithoutAddress(cfp.getSender().getName()),
+                cfpM.getMaladie(),
+                p.getNombre(),
+                p.getDatePeremption(),
+                cfpM.getDate(),
+                p.getPrix(),
+                "Rejeté par l'association");
+        gui.addRow(proposeEvent);
     }
 
     /*
@@ -124,7 +146,7 @@ public class LaboGenResponder extends ContractNetResponder {
         Gson gson = new Gson();
         CFP cfp = gson.fromJson(messageReceived.getContent(), CFP.class);
 
-        Vaccin vaccin = getVaccinByName(cfp.getMaladie());
+        Vaccin vaccin = Requetes.getVaccinByName(cfp.getMaladie());
         double prixTotal = 0;
         double volumeTotal = 0;
         int nombre = 0 ;
@@ -138,7 +160,7 @@ public class LaboGenResponder extends ContractNetResponder {
         /*
         On vérifie si ya assez de vaccin
          */
-        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfp.getNb(),getLaboratoire(), cfp.getDate());
+        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfp.getNb(), getLaboratoire(this.myAgent), cfp.getDate());
 
         //Si on a a pas assez de vaccins
         if(lots==null || lots.size()==0){
@@ -149,7 +171,7 @@ public class LaboGenResponder extends ContractNetResponder {
          * on récupère le prix et le volume cumulés de tous les lots
          */
         volumeTotal = getVolumeLotsTotal(lots);
-        prixTotal = getPriceByStrategies(lots, cfp.getDate(), getLaboratoire());
+        prixTotal = getPriceByStrategies(lots, cfp.getDate(), getLaboratoire(this.myAgent));
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
@@ -159,10 +181,26 @@ public class LaboGenResponder extends ContractNetResponder {
         Propose proposition = new Propose(nombre, prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
         System.out.println("--------Proposition Labo generique "+proposition);
 
+        /**
+         * affichage proposition sur l'interface graphique
+         */
+        ProposeEvent proposeEvent = new ProposeEvent(
+                getNameOfAgentWithoutAddress(messageReceived.getSender().getName()),
+                cfp.getMaladie(),
+                proposition.getNombre(),
+                proposition.getDatePeremption(),
+                cfp.getDate(),
+                proposition.getPrix(),
+                "Envoie de proposition");
+        gui.addRow(proposeEvent);
+
+
         // Create reply
         ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
         replyMessage.setContent(gson.toJson(proposition));
         replyMessage.setPerformative(ACLMessage.PROPOSE);
+        replyMessage.setOntology("Laboratoire");
 
         return replyMessage;
     }
@@ -173,8 +211,8 @@ public class LaboGenResponder extends ContractNetResponder {
         Propose p = gson.fromJson(propose.getContent(),Propose.class);
 
         //on vérifie si on a tjr du stock
-        Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
-        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfpM.getNb(),getLaboratoire(), p.getDateLivraison());
+        Vaccin vaccin = Requetes.getVaccinByName(cfpM.getMaladie());
+        List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfpM.getNb(), getLaboratoire(this.myAgent), p.getDateLivraison());
 
         //Si on a a pas assez de vaccins
         //On informe l'association
@@ -197,7 +235,7 @@ public class LaboGenResponder extends ContractNetResponder {
         Association association = new Association();
         association.setNom(nameAsso);
         vente.setAssociation(association);
-        Laboratoire laboratoire = getLaboratoire();
+        Laboratoire laboratoire = getLaboratoire(this.myAgent);
         laboratoire.setCa(laboratoire.getCa()+p.getPrix());
         vente.setLaboratoire(laboratoire);
 
@@ -215,8 +253,25 @@ public class LaboGenResponder extends ContractNetResponder {
         em.persist(vente);
         em.getTransaction().commit();
 
+
+        /**
+         * affichage proposition sur l'interface graphique
+         */
+        ProposeEvent proposeEvent = new ProposeEvent(
+                association.getNom(),
+                cfpM.getMaladie(),
+                p.getNombre(),
+                p.getDatePeremption(),
+                cfpM.getDate(),
+                p.getPrix(),
+                "Accepté par l'association");
+        gui.addRow(proposeEvent);
+        gui.setCA(laboratoire.getCa());
+
         //on informe l'association que c'est ok
         ACLMessage reply = accept.createReply();
+        reply.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        reply.setOntology("Laboratoire");
         reply.setPerformative(ACLMessage.INFORM);
         return reply;
 
@@ -224,9 +279,11 @@ public class LaboGenResponder extends ContractNetResponder {
 
     private ACLMessage rejectProposal(ACLMessage messageReceived){
         ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        replyMessage.setOntology("Laboratoire");
         replyMessage.setContent("");
         replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
-        System.out.println("Laboratoire generique "+getLaboratoire()+" ---------------- RejectProposal----------");
+        System.out.println("Laboratoire generique "+ getLaboratoire(this.myAgent)+" ---------------- RejectProposal----------");
         return replyMessage;
     }
 
@@ -246,64 +303,27 @@ public class LaboGenResponder extends ContractNetResponder {
         return volume;
     }
 
-
-    private Vaccin getVaccinByName(String name){
-        String hql = "SELECT V FROM Vaccin V WHERE V.nom = :name";
-        Query query = EntityManager.getInstance().createQuery(hql);
-        query.setParameter("name",name);
-        Vaccin vaccin = null;
-        try{
-            vaccin = (Vaccin) query.getSingleResult();
-        }catch (NoResultException no){
-
-        }
-        if(vaccin!=null){
-            return vaccin;
-        }else{
-            return null;
-        }
-    }
-
-    private Laboratoire getLaboratoire(){
-        if(this.labo==null) {
-            String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
-            Query query = EntityManager.getInstance().createQuery(hql);
-            //Obtenir le nom du laboratoire sans son adresse
-            query.setParameter("name", getNameOfAgentWithoutAddress(this.myAgent.getName()));
-            this.labo = (Laboratoire) query.getSingleResult();
-            return this.labo;
-        }else{
-            return this.labo;
-        }
-    }
-
     /**
-     * recupere un stock de lot de vaccin d'un labo donné dont la date DLC est > à la date de livraison
-     * @param vaccin
-     * @param labo
-     * @param dateLivraison
+     * Permet de récupérer l'objet laboratoire à partir du nom de l'agent
      * @return
      */
-    private List<Lot> getStock(Vaccin vaccin, Laboratoire labo, Date dateLivraison){
-        //on recupere tous les lots du vaccin concerné
-        String r = "SELECT lo FROM Lot lo WHERE DATEDIFF(dateDLC,:dateLivraison)>0 AND lo.nom=:name AND laboratoire_id=:labo";
-        Query q = em.createQuery(r);
-        q.setParameter("name",vaccin.getNom());
-        q.setParameter("labo",labo.getNom());
-        q.setParameter("dateLivraison", dateLivraison);
-        System.out.println("taille des résultats getStock : "+q.getResultList().size());
-        return q.getResultList();
+    private Laboratoire getLaboratoire(Agent a){
+        if(this.labo==null) {
+            this.labo = Requetes.getLaboratoireByName(getNameOfAgentWithoutAddress(a.getName()));
+            return this.labo;
+        }else{
+            return this.labo;
+        }
     }
 
     private List<Lot> getALlLotsWithEnoughVaccin(Vaccin vaccin,int nombre, Laboratoire labo, Date dateLivraison){
         //on recupere tous les lots du vaccin concerné
-        List<Lot> stocks = getStock(vaccin, labo, dateLivraison);
+        List<Lot> stocks = Requetes.getStock(vaccin, labo, dateLivraison);
         List<Lot> lots = new ArrayList<Lot>();
         //on vérifie si on a assez de vaccin
         for(Lot lot : stocks){
             //on soustrait
             nombre-=lot.getNombre();
-            System.out.println(nombre);
             lots.add(lot);
         }
         /**
@@ -370,7 +390,7 @@ public class LaboGenResponder extends ContractNetResponder {
     private double getPriceByStockStrategy(Lot lot, Date dateLivraison, Laboratoire labo, double price){
         Vaccin v = new Vaccin();
         v.setNom(lot.getNom());
-        List<Lot> stocks = getStock(v, labo, dateLivraison);
+        List<Lot> stocks = Requetes.getStock(v, labo, dateLivraison);
         double rabais = 0;
         int nbVaccin = 0;
         //on récupere le nombre total de vaccin

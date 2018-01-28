@@ -62,8 +62,9 @@ public class DummyInitiatorAgent extends Agent {
         message.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
         message.setContent(gson.toJson(cfp));
         message.setSender(this.getAID());
-        message.addReceiver(getLabos().get(0));
-        message.addReceiver(getLabos().get(1));
+        for(AID aid : getLabos()){
+            message.addReceiver(aid);
+        }
 
         return message;
     }
@@ -112,7 +113,7 @@ public class DummyInitiatorAgent extends Agent {
                 Iterator iter = desc.getAllServices();
                 while (iter.hasNext()) {
                     ServiceDescription sd = (ServiceDescription) iter.next();
-                    if (sd.getType().equals("Labo")) {
+                    if (sd.getType().equals("labo")) {
                         labos.add(desc.getName());
                     }
                 }

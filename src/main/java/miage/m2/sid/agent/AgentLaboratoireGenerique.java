@@ -9,10 +9,12 @@ import jade.domain.FIPAException;
 import miage.m2.sid.behaviour.LaboGenResponder;
 import miage.m2.sid.container.LaboratoireGenContainer;
 import miage.m2.sid.model.Generique;
+import miage.m2.sid.ui.InterfaceAgentLaboratoire;
 
 public class AgentLaboratoireGenerique extends Agent{
 
 	private LaboratoireGenContainer container;
+    private InterfaceAgentLaboratoire gui;
 	private Behaviour behaviour;
 	private DFAgentDescription dfd;
     Generique labo;
@@ -24,10 +26,12 @@ public class AgentLaboratoireGenerique extends Agent{
 		if(generique==null){
 			System.out.println("fail");
 		}
+        container.setAgentGen(this);
+        gui = container.getControllerInterface();
+
 		//initialisation de l'agent
 		System.out.println(this.getName()+" "+this.getAID()+" started");
-		//putain dérreur humaine
-		this.behaviour = new LaboGenResponder(this, null);
+		this.behaviour = new LaboGenResponder(this, null, gui);
 		registerService();
 		addBehaviour(behaviour);
 	}
@@ -37,7 +41,7 @@ public class AgentLaboratoireGenerique extends Agent{
 		dfd.setName(this.getAID());
 
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("Labo");
+		sd.setType("labo");
 		sd.setName("LaboGenerique");
 
 		dfd.addServices(sd);
