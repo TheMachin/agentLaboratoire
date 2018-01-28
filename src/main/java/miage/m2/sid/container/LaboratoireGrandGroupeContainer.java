@@ -25,6 +25,7 @@ public class LaboratoireGrandGroupeContainer extends Application {
     private Stage primaryStage;
     private AgentLaboratoireGrandGroupe agentGrandGroupe;
     private InterfaceAgentLaboratoire gui;
+    private javax.persistence.EntityManager em = EntityManager.getInstance();
     private Laboratoire laboratoire;
 
     public static void main(String[] args) {
@@ -43,16 +44,15 @@ public class LaboratoireGrandGroupeContainer extends Application {
             properties.setProperty(Profile.GUI, "true");
 
             ProfileImpl profileImpl = new ProfileImpl(properties);
-            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
+            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "192.168.110.1");
             profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "Laboratoire");
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
+            //agent grand groupe
             AgentController agentLabo = agentContainer
                     .createNewAgent("Agent " + laboratoire.getNom(), AgentLaboratoireGrandGroupe.class.getName(), new Object[]{this, laboratoire});
 
-            AgentController agentLogistique = agentContainer.createNewAgent("Agent logistique", AgentLogistique.class.getName(),null);
 
             agentLabo.start();
-            agentLogistique.start();
         } catch (ControllerException e) {
             //Logger.log(Level.FATAL,e.toString(),e);
             e.printStackTrace();
@@ -95,6 +95,8 @@ public class LaboratoireGrandGroupeContainer extends Application {
     public InterfaceAgentLaboratoire getControllerInterface() {
         return this.gui;
     }
+
+
 
 }
 

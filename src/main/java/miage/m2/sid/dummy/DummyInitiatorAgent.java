@@ -55,7 +55,7 @@ public class DummyInitiatorAgent extends Agent {
 
     ACLMessage initiate(){
         Gson gson = new Gson();
-        CFP cfp = new CFP("grippe",15, new Date());
+        CFP cfp = new CFP("varicelle",100, new Date());
 
         ACLMessage message = new ACLMessage(ACLMessage.CFP);
         message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
@@ -63,13 +63,15 @@ public class DummyInitiatorAgent extends Agent {
         message.setContent(gson.toJson(cfp));
         message.setSender(this.getAID());
         message.addReceiver(getLabos().get(0));
+        message.addReceiver(getLabos().get(1));
 
         return message;
     }
 
     void sendCFP(AID receiverAid){
+        System.out.println("receverAid : "+receiverAid);
         Gson gson = new Gson();
-        CFP cfp = new CFP("sida",80, new Date());
+        CFP cfp = new CFP("varicelle",100, new Date());
 
         ACLMessage message = new ACLMessage(ACLMessage.CFP);
         message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
@@ -78,9 +80,7 @@ public class DummyInitiatorAgent extends Agent {
         message.setSender(this.getAID());
         message.addReceiver(receiverAid);
 
-
-        behaviour.reset(message);
-        //send(message);
+        behaviour = new DummyInitiator(this, message);
     }
 
     /*public ACLMessage startLabo() {

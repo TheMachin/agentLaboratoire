@@ -14,12 +14,16 @@ import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
 import miage.m2.sid.model.*;
 
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import java.util.*;
 
 public class LaboGrandGroupeResponder extends ContractNetResponder {
 
     private javax.persistence.EntityManager em = EntityManager.getInstance();
+    private Laboratoire labo;
+
+
     // Take care that if mt is null every message is consumed by this protocol.
     public LaboGrandGroupeResponder(Agent a, MessageTemplate mt) {
         super(a, mt);
@@ -40,10 +44,12 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
+        System.out.println("Laboratoire Grand Groupe ---------------- handleCfp");
         System.out.println("GRAND GROUPE Called : handleCfp");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
+
 
         try{
             return createProposition(cfp);
@@ -68,6 +74,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
+        System.out.println("Laboratoire Grand Groupe ---------------- ACCEPTPROPOSAL--------------------");
         System.out.println("Called : handleAcceptProposal");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
@@ -75,8 +82,8 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
 
         /**
          * enregistrement des infos
-
-        acceptPropose(cfp,propose,accept);*/
+        */
+        acceptPropose(cfp,propose,accept);
 
         ACLMessage inform = accept.createReply();
         inform.setPerformative(ACLMessage.INFORM);
@@ -157,41 +164,36 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         return replyMessage;
     }
 
-    /*private void acceptPropose(ACLMessage cfp, ACLMessage propose, ACLMessage accept){
+    private void acceptPropose(ACLMessage cfp, ACLMessage propose, ACLMessage accept){
         Gson gson = new Gson();
         CFP cfpM = gson.fromJson(cfp.getContent(),CFP.class);
         Propose p = gson.fromJson(propose.getContent(),Propose.class);
 
-        Lot lot = new Lot();
-        lot.setVolume(p.getVolume()*p.getNombre());
-        lot.setPrix((double) (p.getPrix()*p.getNombre()));
-        lot.setDateDLC(p.getDatePeremption());
+
         Vaccin vaccin = getVaccinByName(cfpM.getMaladie());
-        for(int i=0;i<cfpM.getNb();i++){
-            lot.addVaccin(vaccin);
-        }
-        List<Lot> lots = new ArrayList<Lot>();
-        lots.add(lot);
-        Offre offre = new Offre();
-        offre.setAccepte(true);
-        offre.setDateDebutOffre(null);
-        offre.setDateAchat(new Date());
-        offre.setDateLimite(p.getDateLivraison());
-        offre.setLots(lots);
+        double volume = vaccin.getVolume() * cfpM.getNb();
+        double prix = vaccin.getPrix() * cfpM.getNb();
+
+        Vente vente = new Vente();
+        vente.setNomVaccin(vaccin.getNom());
+        vente.setNombreTotal(cfpM.getNb());
+        vente.setDataAchat(new Date());
+        vente.setPrix(prix);
+        vente.setVolumeTotal(volume);
+
         Association association = new Association();
-        association.setNom(cfp.getSender().getName());
-        offre.setAssociation(association);
+        association.setNom(getNameOfAgentWithoutAddress(cfp.getSender().getName()));
+        vente.setAssociation(association);
         Laboratoire laboratoire = getLaboratoire();
-        laboratoire.setCa(laboratoire.getCa()+lot.getPrix());
+        laboratoire.setCa(laboratoire.getCa()+prix);
 
         em.getTransaction().begin();
-        em.persist(lot);
         em.merge(association);
         em.merge(laboratoire);
-        em.persist(offre);
+        em.persist(vente);
         em.getTransaction().commit();
 
-    }*/
+    }
 
     /*
         Get vaccin by his name
@@ -202,10 +204,56 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         String hql = "SELECT V FROM Vaccin V WHERE V.nom = :name";
         Query query = EntityManager.getInstance().createQuery(hql);
         query.setParameter("name",name);
-        if(query.getSingleResult() == null){
-            return null;
+        Vaccin vaccin = null;
+        try{
+            vaccin = (Vaccin) query.getSingleResult();
+        }catch (NoResultException no) {
+
+        }
+        if(vaccin!=null){
+            return vaccin;
         }else{
-            return (Vaccin)query.getSingleResult();
+            return null;
+        }
+    }
+
+    /**
+     * Permet d'obtenir le nom de l'agent sans son adresse
+     * @param a
+     * @return
+     */
+    private String getNameOfAgentWithoutAddress(String a){
+        String[] parts = a.split("@");
+        return parts[0];
+    }
+
+    private Laboratoire getLaboratoire(){
+        if(this.labo==null) {
+            String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
+            Query query = EntityManager.getInstance().createQuery(hql);
+            //Obtenir le nom du laboratoire sans son adresse
+            query.setParameter("name", getNameOfAgentWithoutAddress(this.myAgent.getName()));
+            Laboratoire la = null;
+
+            try{
+                la = (Laboratoire) query.getSingleResult();
+            }catch (NoResultException no){
+
+            }
+            if(la!=null) {
+                this.labo = la;
+                return this.labo;
+            }else{
+                labo = new Laboratoire();
+                labo.setNom(getNameOfAgentWithoutAddress(this.myAgent.getName()));
+                labo.setCa(0);
+                em.getTransaction().begin();
+                em.persist(labo);
+                em.getTransaction().commit();
+                return this.labo;
+            }
+        }else{
+            return this.labo;
         }
     }
 }

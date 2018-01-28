@@ -41,7 +41,7 @@ public class AgentLaboratoireGrandGroupe extends Agent{
 		dfd.setName(this.getAID());
 
 		ServiceDescription sd = new ServiceDescription();
-		sd.setType("labo");
+		sd.setType("Labo");
 		sd.setName("LaboGrandGroupe");
 
 		dfd.addServices(sd);

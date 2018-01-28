@@ -41,27 +41,27 @@ public class Main {
 
         javax.persistence.EntityManager em = EntityManager.getInstance();
 
-        Laboratoire l1 = new Generique();
+        Laboratoire l1 = new Laboratoire();
 		l1.setNom("Le générique de l'ouest");
 		l1.setCa(0);
 		l1.setLots(null);
 		l1.setLots(null);
-        Laboratoire l2 = new Generique();
+        Laboratoire l2 = new Laboratoire();
         l2.setNom("La contrefaçon chinoise");
         l2.setCa(0);
         l2.setLots(null);
         l2.setLots(null);
-        Laboratoire l3 = new Generique();
+        Laboratoire l3 = new Laboratoire();
         l3.setNom("GeneriqueLabo");
         l3.setCa(0);
         l3.setLots(null);
         l3.setLots(null);
-        Laboratoire l4 = new Generique();
+        Laboratoire l4 = new Laboratoire();
         l4.setNom("El famoso labo");
         l4.setCa(0);
         l4.setLots(null);
         l4.setLots(null);
-        Laboratoire l5 = new Generique();
+        Laboratoire l5 = new Laboratoire();
         l5.setNom("Le petit labo");
         l5.setCa(0);
         l5.setLots(null);

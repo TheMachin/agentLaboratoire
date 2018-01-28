@@ -14,6 +14,7 @@ import miage.m2.sid.dummy.CFP;
 import miage.m2.sid.dummy.Propose;
 import miage.m2.sid.model.*;
 
+import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -24,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 public class LaboGenResponder extends ContractNetResponder {
 
     private javax.persistence.EntityManager em = EntityManager.getInstance();
+    private Laboratoire labo = null;
 
     // Take care that if mt is null every message is consumed by this protocol.
     public LaboGenResponder(Agent a, MessageTemplate mt) {
@@ -45,6 +47,7 @@ public class LaboGenResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleCfp(ACLMessage cfp) throws RefuseException, FailureException, NotUnderstoodException {
+        System.out.println("Laboratoire generique "+getLaboratoire()+" ---------------- handleCfp");
         System.out.println("Called : handleCfp");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
@@ -67,10 +70,12 @@ public class LaboGenResponder extends ContractNetResponder {
      */
     @Override
     protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
+        System.out.println("Laboratoire generique "+getLaboratoire()+" ---------------- AcceptProposal");
         System.out.println("Called : handleAcceptProposal");
         System.out.println("Ontology : "+cfp.getOntology());
         System.out.println("Performative : "+cfp.getPerformative());
         System.out.println("Content : "+cfp.getContent());
+        System.out.println("Propose : "+propose.toString() );
         return acceptPropose(cfp,propose,accept);
     }
 
@@ -121,20 +126,14 @@ public class LaboGenResponder extends ContractNetResponder {
 
         Vaccin vaccin = getVaccinByName(cfp.getMaladie());
         double prixTotal = 0;
-        int volumeTotal = 0;
+        double volumeTotal = 0;
+        int nombre = 0 ;
         /**
          * Pas de vaccin pour la maladie
          */
         if(vaccin==null){
             // Create reply
-            ACLMessage replyMessage = messageReceived.createReply();
-            replyMessage.setContent("");
-            replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
-
-            return replyMessage;
-        }else{
-            prixTotal = cfp.getNb() * vaccin.getPrix();
-            volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
+            return rejectProposal(messageReceived);
         }
         /*
         On vérifie si ya assez de vaccin
@@ -142,21 +141,23 @@ public class LaboGenResponder extends ContractNetResponder {
         List<Lot> lots = getALlLotsWithEnoughVaccin(vaccin,cfp.getNb(),getLaboratoire(), cfp.getDate());
 
         //Si on a a pas assez de vaccins
-        if(lots==null){
-            ACLMessage replyMessage = messageReceived.createReply();
-            replyMessage.setContent("");
-            replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
-
-            return replyMessage;
+        if(lots==null || lots.size()==0){
+            return rejectProposal(messageReceived);
         }
+
+        /**
+         * on récupère le prix et le volume cumulés de tous les lots
+         */
+        volumeTotal = getVolumeLotsTotal(lots);
+        prixTotal = getPriceByStrategies(lots, cfp.getDate(), getLaboratoire());
 
         Calendar cal = Calendar.getInstance();
         cal.setTime(new Date());
         cal.add(Calendar.MONTH, 1); // Add 1 month to current date
 
         // Create proposition
-        Propose proposition = new Propose(cfp.getNb(), prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
-        System.out.println(proposition);
+        Propose proposition = new Propose(nombre, prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
+        System.out.println("--------Proposition Labo generique "+proposition);
 
         // Create reply
         ACLMessage replyMessage = messageReceived.createReply();
@@ -177,25 +178,29 @@ public class LaboGenResponder extends ContractNetResponder {
 
         //Si on a a pas assez de vaccins
         //On informe l'association
-        if(lots==null){
-            ACLMessage replyMessage = accept.createReply();
-            replyMessage.setContent("");
-            replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
-
-            return replyMessage;
+        if(lots==null || lots.size()==0){
+            return rejectProposal(accept);
         }
+
+        /**
+         * obtenir le nom de l'association sans son adresse
+         */
+        String nameAsso = getNameOfAgentWithoutAddress(cfp.getSender().getName());
+
         //On enregistre tous les infos
-        Offre offre = new Offre();
-        offre.setAccepte(true);
-        offre.setDateDebutOffre(null);
-        offre.setDateAchat(new Date());
-        offre.setDateLimite(p.getDateLivraison());
-        offre.setLots(lots);
+        Vente vente = new Vente();
+        vente.setPrix(p.getPrix());
+        vente.setVolumeTotal(p.getVolume());
+        vente.setNomVaccin(cfpM.getMaladie());
+        vente.setDataAchat(new Date());
+        vente.setNombreTotal(lots.size());
         Association association = new Association();
-        association.setNom(cfp.getSender().getName());
-        offre.setAssociation(association);
+        association.setNom(nameAsso);
+        vente.setAssociation(association);
         Laboratoire laboratoire = getLaboratoire();
         laboratoire.setCa(laboratoire.getCa()+p.getPrix());
+        vente.setLaboratoire(laboratoire);
+
 
         //on supprime les lots
         for(Lot l : lots){
@@ -207,7 +212,7 @@ public class LaboGenResponder extends ContractNetResponder {
         em.getTransaction().begin();
         em.merge(association);
         em.merge(laboratoire);
-        em.persist(offre);
+        em.persist(vente);
         em.getTransaction().commit();
 
         //on informe l'association que c'est ok
@@ -217,19 +222,59 @@ public class LaboGenResponder extends ContractNetResponder {
 
     }
 
+    private ACLMessage rejectProposal(ACLMessage messageReceived){
+        ACLMessage replyMessage = messageReceived.createReply();
+        replyMessage.setContent("");
+        replyMessage.setPerformative(ACLMessage.REJECT_PROPOSAL);
+        System.out.println("Laboratoire generique "+getLaboratoire()+" ---------------- RejectProposal----------");
+        return replyMessage;
+    }
+
+    private double getPriceLotsTotal(List<Lot> lots){
+        double price = 0;
+        for(Lot lot : lots){
+            price+=lot.getPrix();
+        }
+        return price;
+    }
+
+    private double getVolumeLotsTotal(List<Lot> lots){
+        double volume = 0;
+        for(Lot lot : lots){
+            volume+=lot.getVolume();
+        }
+        return volume;
+    }
+
 
     private Vaccin getVaccinByName(String name){
         String hql = "SELECT V FROM Vaccin V WHERE V.nom = :name";
         Query query = EntityManager.getInstance().createQuery(hql);
         query.setParameter("name",name);
-        return (Vaccin)query.getSingleResult();
+        Vaccin vaccin = null;
+        try{
+            vaccin = (Vaccin) query.getSingleResult();
+        }catch (NoResultException no){
+
+        }
+        if(vaccin!=null){
+            return vaccin;
+        }else{
+            return null;
+        }
     }
 
     private Laboratoire getLaboratoire(){
-        String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
-        Query query = EntityManager.getInstance().createQuery(hql);
-        query.setParameter("name",this.myAgent.getName());
-        return (Laboratoire) query.getSingleResult();
+        if(this.labo==null) {
+            String hql = "SELECT l FROM Laboratoire l WHERE l.nom = :name";
+            Query query = EntityManager.getInstance().createQuery(hql);
+            //Obtenir le nom du laboratoire sans son adresse
+            query.setParameter("name", getNameOfAgentWithoutAddress(this.myAgent.getName()));
+            this.labo = (Laboratoire) query.getSingleResult();
+            return this.labo;
+        }else{
+            return this.labo;
+        }
     }
 
     /**
@@ -241,11 +286,12 @@ public class LaboGenResponder extends ContractNetResponder {
      */
     private List<Lot> getStock(Vaccin vaccin, Laboratoire labo, Date dateLivraison){
         //on recupere tous les lots du vaccin concerné
-        String r = "SELECT lo FROM Lot lo JOIN Laboratoire l WHERE DATEDIFF(dateDLC,:dateLivraison)>0 AND l.lots=lo.nom AND lo.nom=:name AND l.nom=:labo";
+        String r = "SELECT lo FROM Lot lo WHERE DATEDIFF(dateDLC,:dateLivraison)>0 AND lo.nom=:name AND laboratoire_id=:labo";
         Query q = em.createQuery(r);
         q.setParameter("name",vaccin.getNom());
         q.setParameter("labo",labo.getNom());
         q.setParameter("dateLivraison", dateLivraison);
+        System.out.println("taille des résultats getStock : "+q.getResultList().size());
         return q.getResultList();
     }
 
@@ -257,26 +303,30 @@ public class LaboGenResponder extends ContractNetResponder {
         for(Lot lot : stocks){
             //on soustrait
             nombre-=lot.getNombre();
-            if(nombre>0) {
-                lots.add(lot);
-            }
+            System.out.println(nombre);
+            lots.add(lot);
         }
+        /**
+         * si on a assez de vaccin on retourne les lots
+         * sinon on retourne un null
+         */
         if(nombre<=0){
             return lots;
+        }else{
+            return null;
         }
-        return null;
     }
 
     /**
      * on propose un prix en fonction de deux stratégies (DLC ou stock)
-     * @param lot
+     * @param lots
      * @param dateLivraison
      * @return le prix la plus faible
      */
-    private double getPriceByStrategies(Lot lot, Date dateLivraison, Laboratoire labo){
+    private double getPriceByStrategies(List<Lot> lots, Date dateLivraison, Laboratoire labo){
 
-        double priceByDLCStrategy = getPriceByDLCStrategy(lot, dateLivraison);
-        double priceByStockStrategy = getPriceByStockStrategy(lot, dateLivraison, labo);
+        double priceByDLCStrategy = getPriceByDLCStrategy(lots, dateLivraison);
+        double priceByStockStrategy = getPriceByStockStrategy(lots.get(0), dateLivraison, labo, getPriceLotsTotal(lots));
 
         if(priceByDLCStrategy>priceByStockStrategy){
             return priceByStockStrategy;
@@ -287,31 +337,37 @@ public class LaboGenResponder extends ContractNetResponder {
 
     /**
      * Reduit prix du lot si dlc inférieur à 1 semaine avant la date de livraison
-     * @param lot
+     * Le rabais dépend de la DLC pour chaque lot
+     * @param lots
      * @param dateLivraison
      * @return price
      */
-    private double getPriceByDLCStrategy(Lot lot, Date dateLivraison){
-        long date = dateLivraison.getTime()-lot.getDateDLC().getTime();
-        //System.out.println(simpleDateFormat.format(labo.getLots().get(0).getDateDLC()));
-        long jourDiff = TimeUnit.DAYS.convert(date, TimeUnit.MILLISECONDS);
-        System.out.println("Jours diff "+ jourDiff);
-        if(jourDiff < 7){
-            return lot.getPrix() - (lot.getPrix()*0.3);
-        }else{
-            return lot.getPrix();
+    private double getPriceByDLCStrategy(List<Lot> lots, Date dateLivraison){
+        double price = 0;
+        for(Lot lot : lots) {
+            long date = dateLivraison.getTime() - lot.getDateDLC().getTime();
+            //System.out.println(simpleDateFormat.format(labo.getLots().get(0).getDateDLC()));
+            long jourDiff = TimeUnit.DAYS.convert(date, TimeUnit.MILLISECONDS);
+            System.out.println("Jours diff " + jourDiff);
+            if (jourDiff < 7) {
+                price+= lot.getPrix() - (lot.getPrix() * 0.3);
+            } else {
+                price+= lot.getPrix();
+            }
         }
+        return price;
     }
 
     /**
      * Obtenir un prix selon la stratégie du stock
      * Si on a trop de stock, on diminue le prix
+     * Le rabais dépend du stock du laboratoire
      * @param lot
      * @param dateLivraison
      * @param labo
      * @return
      */
-    private double getPriceByStockStrategy(Lot lot, Date dateLivraison, Laboratoire labo){
+    private double getPriceByStockStrategy(Lot lot, Date dateLivraison, Laboratoire labo, double price){
         Vaccin v = new Vaccin();
         v.setNom(lot.getNom());
         List<Lot> stocks = getStock(v, labo, dateLivraison);
@@ -333,7 +389,17 @@ public class LaboGenResponder extends ContractNetResponder {
         }else if(stocks.size()>100){
             rabais = 0.05 * lot.getPrix();
         }
-        return lot.getPrix() - rabais;
+        return price - rabais;
+    }
+
+    /**
+     * Permet d'obtenir le nom de l'agent sans son adresse
+     * @param a
+     * @return
+     */
+    private String getNameOfAgentWithoutAddress(String a){
+        String[] parts = a.split("@");
+        return parts[0];
     }
 
 }

@@ -33,7 +33,7 @@ public class DummyAssocContainer extends Application{
             properties.setProperty(Profile.GUI, "true");
 
             ProfileImpl profileImpl = new ProfileImpl(properties);
-            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
+            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "192.168.110.1");
             profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "association");
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
             AgentController agentLabo = agentContainer

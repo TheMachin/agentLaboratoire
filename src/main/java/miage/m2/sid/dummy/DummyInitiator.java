@@ -33,6 +33,10 @@ public class DummyInitiator extends ContractNetInitiator {
         }
     }
 
+    public void reset(ACLMessage message){
+        this.reset(message);
+    }
+
     private void sendResponse(ACLMessage response) {
         Gson gson = new Gson();
 
@@ -43,19 +47,17 @@ public class DummyInitiator extends ContractNetInitiator {
             if(accepte==1){
                 ACLMessage agree = response.createReply();
                 agree.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                System.out.println("-----------Accept_proposal-------------");
                 this.myAgent.send(agree);
             }else{
-                //probo négociation
-                int negocie = 0 + (int)(Math.random() * ((1 - 0) + 1));
-                if(negocie==1){
-                    
-                }else{
-                    ACLMessage reject = response.createReply();
-                    reject.setPerformative(ACLMessage.REJECT_PROPOSAL);
-                    this.myAgent.send(reject);
-                }
+                ACLMessage reject = response.createReply();
+                reject.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                System.out.println("-----------Reject_proposal-------------");
+                this.myAgent.send(reject);
             }
         }
+
+        //this.reset();
 
 
     }

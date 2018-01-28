@@ -14,7 +14,7 @@ public class Propose implements Serializable {
     public Propose() {
     }
 
-    public Propose(Integer nombre, Double prix, Date dateLivraison, Date datePeremption, int volume) {
+    public Propose(Integer nombre, Double prix, Date dateLivraison, Date datePeremption, double volume) {
         this.nombre = nombre;
         this.prix = prix;
         this.dateLivraison = dateLivraison;
