@@ -9,6 +9,7 @@ import jade.wrapper.ControllerException;
 import miage.m2.sid.excel.model.PoiVaccin;
 import miage.m2.sid.model.Generique;
 import miage.m2.sid.model.Laboratoire;
+import jade.core.MicroRuntime;
 
 public class Main {
 
@@ -25,8 +26,7 @@ public class Main {
 			properties.setProperty(Profile.GUI, "true");
 			
 			ProfileImpl profileImpl = new ProfileImpl(properties);
-			profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
-			profileImpl.setParameter(ProfileImpl.MAIN_PORT, "1099");
+			profileImpl.setParameter("host", "192.168.43.229");
 			AgentContainer agentContainer = runtime.createMainContainer(profileImpl);
 			agentContainer.start();
 			

@@ -43,15 +43,16 @@ public class LaboratoireGrandGroupeContainer extends Application {
         laboratoire.setNom("Un grand labo");
 
         try {
-            Runtime runtime = Runtime.instance();
+            Runtime runtime = Runtime.instance();// cest peut etre ça
             jade.util.leap.Properties properties = new ExtendedProperties();
             properties.setProperty(Profile.GUI, "true");
 
             ProfileImpl profileImpl = new ProfileImpl(properties);
-            profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
-            profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "Laboratoire");
+            profileImpl.setParameter("host", "192.168.43.229");
+            profileImpl.setParameter(Profile.EXPORT_HOST, "192.168.43.178");
+            profileImpl.setParameter("main", "false");
+            profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "LaboratoireGrandGroupes");
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
-
             //agent grand groupe
             AgentController agentLabo = agentContainer.createNewAgent(
                     "Agent " + laboratoire.getNom(),

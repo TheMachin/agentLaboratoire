@@ -17,6 +17,7 @@ import miage.m2.sid.event.ProposeEvent;
 import miage.m2.sid.model.*;
 import miage.m2.sid.query.Requetes;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
+import miage.m2.sid.util.Utils;
 
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -172,7 +173,7 @@ public class LaboGrandGroupeResponder extends ContractNetResponder {
         cal.add(Calendar.MONTH, 1); // Add 1 month to current date
 
         // Create proposition
-        double prixTotal = cfp.getNb() * vaccin.getPrix();
+        double prixTotal = Utils.round(cfp.getNb() * vaccin.getPrix(),2);
         int volumeTotal = (int)(cfp.getNb() * vaccin.getVolume());
         Propose proposition = new Propose(cfp.getNb(), prixTotal, cfp.getDate(), cal.getTime(), volumeTotal);
         System.out.println(proposition);

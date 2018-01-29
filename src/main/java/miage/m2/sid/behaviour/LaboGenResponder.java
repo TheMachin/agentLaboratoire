@@ -17,6 +17,7 @@ import miage.m2.sid.event.ProposeEvent;
 import miage.m2.sid.model.*;
 import miage.m2.sid.query.Requetes;
 import miage.m2.sid.ui.InterfaceAgentLaboratoire;
+import miage.m2.sid.util.Utils;
 import org.greenrobot.eventbus.EventBus;
 
 import java.util.ArrayList;
@@ -300,7 +301,7 @@ public class LaboGenResponder extends ContractNetResponder {
         for(Lot lot : lots){
             volume+=lot.getVolume();
         }
-        return volume;
+        return Utils.round(volume,2);
     }
 
     /**
@@ -349,9 +350,9 @@ public class LaboGenResponder extends ContractNetResponder {
         double priceByStockStrategy = getPriceByStockStrategy(lots.get(0), dateLivraison, labo, getPriceLotsTotal(lots));
 
         if(priceByDLCStrategy>priceByStockStrategy){
-            return priceByStockStrategy;
+            return Utils.round(priceByStockStrategy,2);
         }else{
-            return priceByDLCStrategy;
+            return Utils.round(priceByDLCStrategy, 2);
         }
     }
 

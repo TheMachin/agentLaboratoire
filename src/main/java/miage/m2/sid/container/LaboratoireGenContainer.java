@@ -42,6 +42,7 @@ public class LaboratoireGenContainer extends Application{
             properties.setProperty(Profile.GUI, "false");
 
             ProfileImpl profileImpl = new ProfileImpl(properties);
+            profileImpl.setParameter(Profile.EXPORT_HOST, "192.168.43.229");
             profileImpl.setParameter(ProfileImpl.MAIN_HOST, "localhost");
             profileImpl.setParameter(ProfileImpl.CONTAINER_NAME, "LaboratoireGenerique");
             AgentContainer agentContainer = runtime.createAgentContainer(profileImpl);
