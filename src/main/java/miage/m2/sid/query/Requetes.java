@@ -81,4 +81,15 @@ public class Requetes {
         return null;
     }
 
+    public static String getRandomVaccinName(){
+        EntityManager.init();
+        String hql = "SELECT v FROM Vaccin v";
+        Query query = EntityManager.getInstance().createQuery(hql);
+        List<Vaccin> vaccins = query.getResultList();
+        Random r = new Random();
+        int index = r.nextInt(vaccins.size());
+        EntityManager.close();
+        return vaccins.get(index).getNom();
+    }
+
 }

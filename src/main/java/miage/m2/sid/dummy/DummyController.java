@@ -14,7 +14,7 @@ import java.util.ResourceBundle;
 
 public class DummyController implements Initializable {
 
-    DummyInitiatorAgent agentAssoc;
+    DummyAssoSequentialBehavior agentAssoc;
 
     @FXML
     ComboBox cbLabo;

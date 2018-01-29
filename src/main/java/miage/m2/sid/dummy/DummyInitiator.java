@@ -16,17 +16,31 @@ public class DummyInitiator extends ContractNetInitiator {
     }
 
     @Override
+    protected Vector prepareCfps(ACLMessage cfp) {
+        return super.prepareCfps(cfp);
+    }
+
+    @Override
     protected void handleAllResponses(Vector responses, Vector acceptances) {
         System.out.println("--------" + responses.size() + "responses");
         System.out.println("--------" + acceptances.size() + "acceptances");
         List<ACLMessage> proposeResponse = new ArrayList<ACLMessage>();
         for (Object response : responses) {
             ACLMessage reponseMessage = (ACLMessage) response;
-            System.out.println("Response : " + response.toString());
+            //System.out.println("Response : " + response.toString());
 
             if (reponseMessage.getPerformative() == ACLMessage.PROPOSE) {
+                System.out.println("Receive propose : " + response.toString());
                 proposeResponse.add(reponseMessage);
                 sendResponse(reponseMessage);
+
+                try {
+                    System.out.println("Reset");
+                    Thread.sleep(5000);
+                    reset();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -56,17 +70,7 @@ public class DummyInitiator extends ContractNetInitiator {
         }
     }
 
-    /**
-     * Reset cette behaviour
-     */
-    private void resetBehaviour() {
-        System.out.println(myAgent.getLocalName() + " -------- Labo behaviour is reset");
-        CommunicationBehaviour parent = (CommunicationBehaviour) this.parent;
-        parent.init();
-        this.reset(parent.startLabo());
-    }
-
-    public void reset(ACLMessage message){
-        this.reset(message);
+    public void reset(){
+        this.reset(((DummyAssoSequentialBehavior)parent).initiate());
     }
 }

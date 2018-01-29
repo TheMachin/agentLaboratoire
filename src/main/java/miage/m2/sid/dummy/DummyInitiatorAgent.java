@@ -16,20 +16,15 @@ import java.util.Iterator;
 import java.util.List;
 
 public class DummyInitiatorAgent extends Agent {
-    private DummyInitiator behaviour;
+    private DummyAssoSequentialBehavior behaviour;
     private DFAgentDescription dfd;
     private DummyController dummyController;
 
     protected void setup() {
         //initialisation de l'agent
-        //DummyAssocContainer container = (DummyAssocContainer) getArguments()[0];
-        dummyController = (DummyController)getArguments()[1];
-        dummyController.agentAssoc = this;
-        dummyController.displayLabos();
-
         System.out.println(this.getName() + " " + this.getAID() + " started");
 
-        this.behaviour = new DummyInitiator(this, initiate());
+        this.behaviour = new DummyAssoSequentialBehavior(this, (DummyController)getArguments()[1]);
         registerService();
         addBehaviour(behaviour);
     }
@@ -51,78 +46,6 @@ public class DummyInitiatorAgent extends Agent {
             doDelete();
         }
 
-    }
-
-    ACLMessage initiate(){
-        Gson gson = new Gson();
-        CFP cfp = new CFP("varicelle",100, new Date());
-
-        ACLMessage message = new ACLMessage(ACLMessage.CFP);
-        message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-        message.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-        message.setContent(gson.toJson(cfp));
-        message.setSender(this.getAID());
-        for(AID aid : getLabos()){
-            message.addReceiver(aid);
-        }
-
-        return message;
-    }
-
-    void sendCFP(AID receiverAid){
-        System.out.println("receverAid : "+receiverAid);
-        Gson gson = new Gson();
-        CFP cfp = new CFP("varicelle",100, new Date());
-
-        ACLMessage message = new ACLMessage(ACLMessage.CFP);
-        message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-        message.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-        message.setContent(gson.toJson(cfp));
-        message.setSender(this.getAID());
-        message.addReceiver(receiverAid);
-
-        behaviour = new DummyInitiator(this, message);
-    }
-
-    /*public ACLMessage startLabo() {
-        DummyInitiatorAgent assocAgent = (DummyInitiatorAgent) this.myAgent;
-        Objectif objectif = assocAgent.enCours;
-
-        ACLMessage message = new ACLMessage(ACLMessage.CFP);
-        message.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-        message.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-
-        CFP content = new CFP("rage", 80, new Date());
-        Gson gson = new Gson();
-        message.setContent(gson.toJson(content));
-
-        AssocAgent agent = (AssocAgent) this.myAgent;
-        message.setSender(agent.getAID());
-        for (AID aid : agent.getLabos()) {
-            message.addReceiver(aid);
-        }
-        return message;
-    }*/
-
-    List<AID> getLabos() {
-        List<AID> labos = new ArrayList<AID>();
-        DFAgentDescription dfd = new DFAgentDescription();
-        try {
-            DFAgentDescription[] result = DFService.search(this, dfd);
-            for (DFAgentDescription desc : result) {
-                Iterator iter = desc.getAllServices();
-                while (iter.hasNext()) {
-                    ServiceDescription sd = (ServiceDescription) iter.next();
-                    if (sd.getType().equals("labo")) {
-                        labos.add(desc.getName());
-                    }
-                }
-            }
-        } catch (FIPAException e) {
-            e.printStackTrace();
-        }
-        System.out.println("--------There are " + labos.size() + " labos");
-        return labos;
     }
 
     protected void takeDown() {
